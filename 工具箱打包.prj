@@ -1,0 +1,227 @@
+<deployment-project plugin="plugin.toolbox" plugin-version="1.0">
+  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\source\repos\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\source\repos\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
+    <param.appname>通用行为实验控制</param.appname>
+    <param.authnamewatermark>张天夫</param.authnamewatermark>
+    <param.email>vhtmfu@outlook.com</param.email>
+    <param.company>上海科技大学管吉松实验室</param.company>
+    <param.summary>通用行为实验控制PC-MATLAB端</param.summary>
+    <param.description>本工程依赖[MATLAB扩展](https://github.com/Silver-Fang/MATLAB-Extension)
+通用行为实验控制MATLAB端，需与[Arduino端](https://gitee.com/ShanghaiTech-GuanLab/General-behavior-control-Arduino)配合使用。请先阅读Arduino端文档，熟悉系统，完成配置，再设置MATLAB端。
+
+使用前需导入包：
+```MATLAB
+import GeneralBehaviorControl.*
+```
+
+首次使用前先运行Setup.mlx，该函数会要求你选择Arduino端源码中的UIDs.h的路径，然后在工程根目录下生成Experiment_Client.mlx, LogTranslate.mlx, SelfCheck_Client.mlx和UIDs.m。
+
+生成的Experiment_Client和SelfCheck_Client是你的控制面板。一般先根据脚本中已有的提示信息进行设备检查（SelfCheck_Client），然后开始实验（Experiment_Client）
+# 目录
+- [@ExperimentWorker](#ExperimentWorker)
+- [Experiment_Client](#Experiment_Client)
+- [GenerateMatlabUIDs](#GenerateMatlabUIDs)
+- [LogTranslate](#LogTranslate)
+- [SelfCheck_Client](#SelfCheck_Client)
+- [Setup](#Setup)
+- [@UIDs](#UIDs)
+# @ExperimentWorker
+实验主控制器
+
+一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
+## 对象属性
+SavePath(1,1)string，实验记录保存路径
+
+RetryInterval(1,1)double=2，断线重连尝试间隔秒数
+
+MaxRetryTimes(1,1)uint8=3，断线重连尝试次数
+
+SaveFile(1,1)logical，实验结束后是否保存记录
+
+EndMiaoCode(1,1)string=""，喵提醒码
+
+HttpRetryTimes(1,1)uint8=3，喵提醒重试次数
+
+ShutDownSerialAfterSession(1,1)logical，会话结束后是否自动关闭串口
+
+Session(1,1)UIDs，当前运行会话
+
+VideoInput，视频输入设备
+
+SerialFreeTime(1,1)double，如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
+## 对象方法
+PauseSession：暂停会话
+
+ContinueSession：继续会话
+
+AbortSession：放弃会话
+
+CloseSerial：关闭串口
+
+StartCheckMonitor：开始检查监视器。输入参数：DeviceUID(1,1)UIDs，设备标识符
+
+StopCheckMonitor：停止检查监视器
+
+OneEnterOneCheck：检查刺激器，按一次回车给一个刺激，输入任意字符停止检查。输入参数：
+- DeviceUID(1,1)UIDs，设备标识符
+- EnterPrompt(1,1)string，提示文字，将显示在命令行中
+
+CheckManyTimes：多次检查刺激器。输入参数：
+- DeviceUID(1,1)UIDs，设备标识符
+- CheckTimes(1,1)uint8，检查次数
+
+GetInformation：获取会话信息。返回值：Information(1,1)struct，信息结构体
+
+SaveInformation：获取并保存会话信息，输出为UniExp格式文件，文件名符合MTE标准
+
+SerialInitialize：初始化串口。输入参数：SerialPort(1,1)string，串口名称
+
+StartSession：开始会话
+# Experiment_Client
+实验主控台脚本。在这里完成相关配置，并开始实验。通常你需要设定好串口号，选择要运行的会话，设置保存路径，是否自动关闭串口，设置喵提醒码（如果要用），视频拍摄设置。实验进程中，如需暂停、放弃、继续、返回信息、断开串口等操作，则运行脚本中相应节。
+# GenerateMatlabUIDs
+如果你更新了Arduino端的UIDs.h，则需要在MATLAB端重新生成UIDs.m。执行该函数，选择UIDs.h文件的位置；或者将文件路径输入给该函数。
+# LogTranslate
+该函数用于将输出的英文日志翻译成中文。如果你发现实验中输出的日志信息含有英文，而你希望将它翻译成方便阅读的中文，可以模仿已有条目增加新的翻译项。也可以对已有项进行删改。
+# SelfCheck_Client
+实验开始前，应当检查各项设备是否运行正常。该脚本中提供了多种常用的设备检查命令。你也可以照例增添新设备的检查命令。
+# Setup
+一般仅初次部署时需要运行该函数，生成默认的Experiment_Client、SelfCheck_Client、LogTranslate和UIDs
+# UIDs
+该枚举类中记录了和Arduino端完全一致的UID密码表，供MATLAB端参考，识别从串口发来的字节编码。如果要修改UID密码表，应当在Arduino端修改UIDs.h，然后运行GenerateMatlabUIDs.mlx，自动生成UIDs.m，不要手动修改该文件。</param.description>
+    <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
+    <param.version>4.0.0</param.version>
+    <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
+    <param.products.name>
+      <item>Image Acquisition Toolbox</item>
+    </param.products.name>
+    <param.products.id>
+      <item>78</item>
+    </param.products.id>
+    <param.products.version>
+      <item>6.6</item>
+    </param.products.version>
+    <param.platforms />
+    <param.guid>f71ce85b-534c-47de-8ccf-50d6a66605a3</param.guid>
+    <param.exclude.filters>% List files contained in your toolbox folder that you would like to exclude
+% from packaging.  Excludes should be listed relative to the toolbox folder.
+% Some examples of how to specify excludes are provided below:
+%
+% A single file in the toolbox folder:
+% .svn
+%
+% A single file in a subfolder of the toolbox folder:
+% example/.svn
+%
+% All files in a subfolder of the toolbox folder:
+% example/*
+%
+% All files of a certain name in all subfolders of the toolbox folder:
+% **/.svn
+%
+% All files matching a pattern in all subfolders of the toolbox folder:
+% **/*.bak
+%
+.git*
+DebugOnly
+resources/project</param.exclude.filters>
+    <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
+    <param.examples />
+    <param.demosxml />
+    <param.apps />
+    <param.registered.apps />
+    <param.docs />
+    <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
+    <param.matlabpath.excludes>
+      <item>/DebugOnly</item>
+    </param.matlabpath.excludes>
+    <param.javaclasspath.excludes />
+    <param.exported.on.package>false</param.exported.on.package>
+    <param.required.addons>
+      <requiredaddons>
+        <requiredAddOn earliest="7.4.2" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
+      </requiredaddons>
+    </param.required.addons>
+    <param.matlab.project.id />
+    <param.matlab.project.name />
+    <param.release.start>R2021b</param.release.start>
+    <param.release.end>latest</param.release.end>
+    <param.release.current.only>false</param.release.current.only>
+    <param.compatiblity.windows>true</param.compatiblity.windows>
+    <param.compatiblity.macos>true</param.compatiblity.macos>
+    <param.compatiblity.linux>true</param.compatiblity.linux>
+    <param.compatiblity.matlabonline>true</param.compatiblity.matlabonline>
+    <param.installation.map />
+    <param.additional.sw.names />
+    <param.additional.sw.licenses />
+    <param.additional.sw.win.url />
+    <param.additional.sw.mac.url />
+    <param.additional.sw.linux.url />
+    <unset>
+      <param.output />
+      <param.platforms />
+      <param.exclude.pcodedmfiles />
+      <param.examples />
+      <param.demosxml />
+      <param.apps />
+      <param.registered.apps />
+      <param.docs />
+      <param.javaclasspath.excludes />
+      <param.exported.on.package />
+      <param.matlab.project.id />
+      <param.matlab.project.name />
+      <param.release.current.only />
+      <param.compatiblity.windows />
+      <param.compatiblity.macos />
+      <param.compatiblity.linux />
+      <param.compatiblity.matlabonline />
+      <param.installation.map />
+      <param.additional.sw.names />
+      <param.additional.sw.licenses />
+      <param.additional.sw.win.url />
+      <param.additional.sw.mac.url />
+      <param.additional.sw.linux.url />
+    </unset>
+    <fileset.rootdir>
+      <file>${PROJECT_ROOT}</file>
+    </fileset.rootdir>
+    <fileset.rootfiles>
+      <file>${PROJECT_ROOT}\+Gbec</file>
+      <file>${PROJECT_ROOT}\Clients</file>
+      <file>${PROJECT_ROOT}\doc</file>
+      <file>${PROJECT_ROOT}\Gbec</file>
+      <file>${PROJECT_ROOT}\README.md</file>
+      <file>${PROJECT_ROOT}\resources</file>
+      <file>${PROJECT_ROOT}\工具箱图像.png</file>
+    </fileset.rootfiles>
+    <fileset.depfun.included />
+    <fileset.depfun.excluded>
+      <file>${MATLAB_ROOT}\toolbox\local\userpath.m</file>
+      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\LogTranslate.mlx</file>
+      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\UIDs.m</file>
+    </fileset.depfun.excluded>
+    <fileset.package />
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}" name="通用行为实验控制.mltbx" optional="false">C:\Users\vhtmf\source\repos\通用行为实验控制\通用行为实验控制.mltbx</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2022b</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

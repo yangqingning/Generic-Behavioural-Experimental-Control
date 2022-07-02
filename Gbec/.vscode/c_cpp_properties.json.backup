@@ -1,0 +1,20 @@
+{
+	"configurations": [
+		{
+			"name": "Win32",
+			"includePath": [
+				"C:\\Users\\用户名\\AppData\\Local\\Arduino15\\packages\\arduino\\**",
+				"C:\\Users\\用户名\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.4\\cores\\arduino\\**",
+				"C:\\Users\\用户名\\Documents\\Arduino\\libraries\\**"
+			],
+			"defines": [
+				"USBCON",
+				"__AVR_ATmega2560__",
+				"F_CPU=16000000",
+				"ARDUINO_ARCH_AVR"
+			],
+			"compilerPath": "C:\\Users\\用户名\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\bin\\avr-gcc.exe"
+		}
+	],
+	"version": 4
+}
