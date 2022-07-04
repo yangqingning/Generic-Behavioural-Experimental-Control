@@ -41,12 +41,12 @@ const 刺激器类型<引脚号,计时器号,时间参数,UID,是否结束提示
 刺激器的刺激有开始和结束之分。开始时会向串口发送信号。结束时是否发送可以配置，默认发送。
 */
 //一闪刺激器：运行时给指定引脚一个高电平，经过指定毫秒数后，再变成低电平，刺激结束。有1个时间参数：毫秒数。
-const OneShotStimulator<3, 4, 200, Device_BlueLed> BlueShort(&CD11s);
+const OneShotStimulator<3, 4, 1000, Device_BlueLed> Blue1s(&CD11s);
 //此设备跟BlueLed实际上是同一个设备的不同用法，共享UID。
 const OneShotStimulator<3, 4, 250, Device_BlueLed> Blue250ms(&CD1250ms);
 const OneShotStimulator<4, 4, 1000, Device_YellowLed> YellowLed(&CD11s);
-const OneShotStimulator<6, 4, 200, Device_ActiveBuzzer> ActiveBuzzer(&CD11s);
-const OneShotStimulator<8, 2, 150, Device_WaterPump, false> WaterShort(&CD220ms);
+const OneShotStimulator<6, 4, 1000, Device_ActiveBuzzer> ActiveBuzzer(&CD11s);
+const OneShotStimulator<8, 2, 20, Device_WaterPump, false> Water20ms(&CD220ms);
 const OneShotStimulator<8, 2, 200, Device_WaterPump, false> Water200ms(&CD2200ms);
 const OneShotStimulator<7, 2, 20, Device_AirPuff, false> AirPuff(&CD220ms);
 const OneShotStimulator<10, 0, 20, Device_Trigger1, false> Trigger1;
@@ -67,10 +67,10 @@ constexpr uint8_t NoCheckableDevices = 13;
 const ITestable *const CheckableDevices[NoCheckableDevices] = {
 	&CD11s,
 	&CD220ms,
-	&BlueShort,
+	&Blue1s,
 	&YellowLed,
 	&ActiveBuzzer,
-	&WaterShort,
+	&Water20ms,
 	&AirPuff,
 	&Trigger1,
 	&Trigger2,
@@ -106,13 +106,13 @@ const StimulatePhase<计时器号,刺激后延时,UID> 时相名称(&刺激器�
 const StimulatePhase<5, 0, Phase_Trigger> Trigger10P(&Trigger1);
 const StimulatePhase<5, 2000, Phase_Trigger> Trigger12sP(&Trigger1);
 const StimulatePhase<5, 0, Phase_Trigger> Trigger20P(&Trigger2);
-const StimulatePhase<5, 0, Phase_Stimulate> Blue0P(&BlueShort);
+const StimulatePhase<5, 0, Phase_Stimulate> Blue0P(&Blue1s);
 const StimulatePhase<5, 250, Phase_Stimulate> Blue250msP(&Blue250ms);
-const StimulatePhase<5, 1000, Phase_Stimulate> Blue1sP(&BlueShort);
+const StimulatePhase<5, 1000, Phase_Stimulate> Blue1sP(&Blue1s);
 const StimulatePhase<5, 0, Phase_Stimulate> Audio0P(&ActiveBuzzer);
 const StimulatePhase<5, 250, Phase_Stimulate> Audio250msP(&ActiveBuzzer);
 const StimulatePhase<5, 1000, Phase_Stimulate> Audio1sP(&ActiveBuzzer);
-const StimulatePhase<5, 0, Phase_Stimulate> WaterP(&WaterShort);
+const StimulatePhase<5, 0, Phase_Stimulate> Water20msP(&Water20ms);
 const StimulatePhase<5, 0, Phase_Stimulate> Water200msP(&Water200ms);
 const StimulatePhase<5, 0, Phase_Stimulate> AirP(&AirPuff);
 /*
@@ -120,7 +120,7 @@ const StimulatePhase<5, 0, Phase_Stimulate> AirP(&AirPuff);
 const ResponsePhase<毫秒数,超时是否响应,UID> 时相名称(&监测器名称,&响应器名称);
 该时相运行后，将持续检测信号，一旦出现信号，运行响应器。如果达到指定的毫秒数仍未检测到信号，则根据超时是否响应的设定决定是否仍然给响应。
 */
-const ResponsePhase<1000, true, Phase_Response> WaterR(&LickCapacitor, &WaterShort);
+const ResponsePhase<1000, true, Phase_Response> WaterR(&LickCapacitor, &Water20ms);
 const ResponsePhase<1000, true, Phase_Response> AirR(&LickCapacitor, &AirPuff);
 /*
 等待阶段。设置语法：
@@ -130,11 +130,9 @@ const AwaitPhase<计时器号,最小毫秒数,最大毫秒数,UID> 时相名称;
 const AwaitPhase<5, 2000, 2000, Phase_Await> BaseP;
 const AwaitPhase<5, 8000, 18000, Phase_Await> ITI;
 /*
-监视阶段。设置语法：
-const MonitorPhase<计时器号,监视毫秒数,是否只报告一次,UID> 时相名称(&监视器名称);
-该时相运行时，将在指定时间内，使用监视器监视响应。如果只报告一次，则只有第一次响应会汇报至PC端，然后等待至时相结束；否则时相内每次响应都会汇报。
+监视阶段
 */
-const MonitorPhase<5, 1000, true, Phase_Monitor> ResponseWindow(&LickCapacitor);
+const MonitorPhase<5,1000,true,Phase_Monitor> ResponseWindow(&LickCapacitor);
 #pragma endregion
 #pragma region 回合设置
 /*
@@ -152,7 +150,7 @@ DefineTrial(3, Trial_BlueLickWater, BlueLickWaterT, &CalmdownP, &Blue0P, &WaterR
 DefineTrial(3, Trial_AudioLickWater, AudioLickWaterT, &CalmdownP, &Audio0P, &WaterR);
 DefineTrial(2, Trial_BlueOnly, BlueOnlyT, &CalmdownP, &Blue0P);
 DefineTrial(2, Trial_AudioOnly, AudioOnlyT, &CalmdownP, &Audio0P);
-DefineTrial(2, Trial_WaterOnly, WaterOnlyT, &CalmdownP, &WaterP);
+DefineTrial(2, Trial_WaterOnly, WaterOnlyT, &CalmdownP, &Water20msP);
 DefineTrial(2, Trial_AirOnly, AirOnlyT, &ITI, &AirP);
 DefineTrial(3, Trial_TriggerBase, TriggerBaseT, &CalmdownP, &Trigger12sP, &BaseP);
 //所有喷气训练，一般前置2s基线，后置ITI，以便MATLAB端在回合开始时定时拍摄，减小视频文件体积
@@ -160,8 +158,6 @@ DefineTrial(4, Trial_TriggerBlueAir, TriggerBlueAirT, &Trigger12sP, &Blue0P, &Ai
 DefineTrial(4, Trial_TriggerAudioAir, TriggerAudioAirT, &Trigger12sP, &Audio0P, &AirR, &ITI);
 DefineTrial(4, Trial_BlueAir, BlueAirT, &BaseP, &Blue0P, &AirR, &ITI);
 DefineTrial(4, Trial_AudioAir, AudioAirT, &BaseP, &Audio0P, &AirR, &ITI);
-DefineTrial(5, Trial_BlueWater, BlueWaterT, &CalmdownP, &Blue0P, &ResponseWindow, &WaterP, &BaseP);
-DefineTrial(5, Trial_AudioWater, AudioWaterT, &CalmdownP, &Audio0P, &ResponseWindow, &WaterP, &BaseP);
 #pragma endregion
 #pragma region 会话设置
 //最后定义会话。会话是一系列回合的重复。因为需要接受PC端指令启动会话，必须将所有会话包装在一个数组中，并且明确指定会话的个数。
@@ -170,9 +166,9 @@ constexpr uint16_t PureStimuScan[3] = {5, 5, 5};
 constexpr uint16_t TriggerStimuScan[4] = {5, 5, 5, 5};
 constexpr uint16_t TriggerWaterTrain[3] = {20, 30, 5};
 constexpr uint16_t TriggerAirTrain[3] = {20, 80, 5};
-constexpr uint16_t WaterTrain[1] = {30};
-constexpr uint16_t AirTrain[1] = {30};
-constexpr uint8_t NoSessions = 14;
+constexpr uint16_t WaterTrain[1] = {50};
+constexpr uint16_t AirTrain[1] = {100};
+constexpr uint8_t NoSessions = 12;
 const ISession *const SessionList[NoSessions] =
 	{
 		/*
@@ -191,8 +187,5 @@ const ISession *const SessionList[NoSessions] =
 		new Session<3, false, Session_BlueAudioWater>(TrialList(3, &BlueOnlyT, &AudioOnlyT, &WaterOnlyT), PureStimuScan),
 		new Session<3, false, Session_BlueWaterAir>(TrialList(3, &BlueOnlyT, &WaterOnlyT, &AirOnlyT), PureStimuScan),
 		new Session<4, false, Session_TriggerBaseBlueAudioWater>(TrialList(4, &TriggerBaseT, &TriggerBlueT, &TriggerAudioT, &TriggerWaterT), TriggerStimuScan),
-		new Session<4, false, Session_TriggerBaseBlueWaterAir>(TrialList(4, &TriggerBaseT, &TriggerBlueT, &TriggerWaterT, &TriggerAirT), TriggerStimuScan),
-		new Session<1, true, Session_BlueWater>(TrialList(1, &BlueWaterT), WaterTrain),
-		new Session<1, true, Session_AudioWater>(TrialList(1, &AudioWaterT), WaterTrain),
-};
+		new Session<4, false, Session_TriggerBaseBlueWaterAir>(TrialList(4, &TriggerBaseT, &TriggerBlueT, &TriggerWaterT, &TriggerAirT), TriggerStimuScan)};
 #pragma endregion

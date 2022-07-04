@@ -95,8 +95,6 @@ enum UIDs : uint8_t
 	Trial_WaterOnly,
 	Trial_AirOnly,
 	Trial_TriggerBase,
-	Trial_BlueWater,
-	Trial_AudioWater,
 	Session_TriggerBlueAudioWater,
 	Session_TriggerBlueWaterAir,
 	Session_TriggerBlueLickWater,
@@ -111,6 +109,4 @@ enum UIDs : uint8_t
 	Session_TriggerBaseBlueWaterAir,
 	Session_BlueAudioWater,
 	Session_BlueWaterAir,
-	Session_BlueWater,
-	Session_AudioWater,
 };

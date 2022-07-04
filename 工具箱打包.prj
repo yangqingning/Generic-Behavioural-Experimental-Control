@@ -4,90 +4,23 @@
     <param.authnamewatermark>张天夫</param.authnamewatermark>
     <param.email>vhtmfu@outlook.com</param.email>
     <param.company>上海科技大学管吉松实验室</param.company>
-    <param.summary>通用行为实验控制PC-MATLAB端</param.summary>
-    <param.description>本工程依赖[MATLAB扩展](https://github.com/Silver-Fang/MATLAB-Extension)
-通用行为实验控制MATLAB端，需与[Arduino端](https://gitee.com/ShanghaiTech-GuanLab/General-behavior-control-Arduino)配合使用。请先阅读Arduino端文档，熟悉系统，完成配置，再设置MATLAB端。
+    <param.summary>通用行为实验控制，MATLAB与Arduino串口连接</param.summary>
+    <param.description>本实验控制系统分为Arduino服务端和MATLAB客户端两个部分。使用本系统的优越性：
 
-使用前需导入包：
-```MATLAB
-import GeneralBehaviorControl.*
-```
+连接PC端和Arduino只为传简单信号，Arduino端独立决策，比用MATLAB端步步操纵Arduino具有更高的时间精度；
+高度可自定义性，清晰的模块化组件化搭配，可重用性高；
+随时暂停、放弃实验，不需要拔插头；
+实验过程中意外掉线自动重连，不会丢失进度
+配置环境
+安装本工具箱之前需要先安装Arduino IDE。
 
-首次使用前先运行Setup.mlx，该函数会要求你选择Arduino端源码中的UIDs.h的路径，然后在工程根目录下生成Experiment_Client.mlx, LogTranslate.mlx, SelfCheck_Client.mlx和UIDs.m。
+此外，本实验系统还依赖埃博拉酱的MATLAB扩展。正常情况下，此工具箱在安装本工具箱时会被自动安装。如果安装失败，可以在MATLAB附加功能管理器中安装。
 
-生成的Experiment_Client和SelfCheck_Client是你的控制面板。一般先根据脚本中已有的提示信息进行设备检查（SelfCheck_Client），然后开始实验（Experiment_Client）
-# 目录
-- [@ExperimentWorker](#ExperimentWorker)
-- [Experiment_Client](#Experiment_Client)
-- [GenerateMatlabUIDs](#GenerateMatlabUIDs)
-- [LogTranslate](#LogTranslate)
-- [SelfCheck_Client](#SelfCheck_Client)
-- [Setup](#Setup)
-- [@UIDs](#UIDs)
-# @ExperimentWorker
-实验主控制器
+工具箱安装成功后，请务必查看快速入门指南（GettingStarted.mlx），执行进一步安装配置。
 
-一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
-## 对象属性
-SavePath(1,1)string，实验记录保存路径
+本项目是行为实验通用控制程序，因此针对不同的实验设计，你需要自行编写一些自定义Arduino代码。最常用的就是ExperimentDesign.cpp，各种实验参数都需要在这里设置好然后上传到Arduino。对于较大的改动，如硬件、回合、实验方案等的增删，可能还需要修改UIDs.h。
 
-RetryInterval(1,1)double=2，断线重连尝试间隔秒数
-
-MaxRetryTimes(1,1)uint8=3，断线重连尝试次数
-
-SaveFile(1,1)logical，实验结束后是否保存记录
-
-EndMiaoCode(1,1)string=""，喵提醒码
-
-HttpRetryTimes(1,1)uint8=3，喵提醒重试次数
-
-ShutDownSerialAfterSession(1,1)logical，会话结束后是否自动关闭串口
-
-Session(1,1)UIDs，当前运行会话
-
-VideoInput，视频输入设备
-
-SerialFreeTime(1,1)double，如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
-## 对象方法
-PauseSession：暂停会话
-
-ContinueSession：继续会话
-
-AbortSession：放弃会话
-
-CloseSerial：关闭串口
-
-StartCheckMonitor：开始检查监视器。输入参数：DeviceUID(1,1)UIDs，设备标识符
-
-StopCheckMonitor：停止检查监视器
-
-OneEnterOneCheck：检查刺激器，按一次回车给一个刺激，输入任意字符停止检查。输入参数：
-- DeviceUID(1,1)UIDs，设备标识符
-- EnterPrompt(1,1)string，提示文字，将显示在命令行中
-
-CheckManyTimes：多次检查刺激器。输入参数：
-- DeviceUID(1,1)UIDs，设备标识符
-- CheckTimes(1,1)uint8，检查次数
-
-GetInformation：获取会话信息。返回值：Information(1,1)struct，信息结构体
-
-SaveInformation：获取并保存会话信息，输出为UniExp格式文件，文件名符合MTE标准
-
-SerialInitialize：初始化串口。输入参数：SerialPort(1,1)string，串口名称
-
-StartSession：开始会话
-# Experiment_Client
-实验主控台脚本。在这里完成相关配置，并开始实验。通常你需要设定好串口号，选择要运行的会话，设置保存路径，是否自动关闭串口，设置喵提醒码（如果要用），视频拍摄设置。实验进程中，如需暂停、放弃、继续、返回信息、断开串口等操作，则运行脚本中相应节。
-# GenerateMatlabUIDs
-如果你更新了Arduino端的UIDs.h，则需要在MATLAB端重新生成UIDs.m。执行该函数，选择UIDs.h文件的位置；或者将文件路径输入给该函数。
-# LogTranslate
-该函数用于将输出的英文日志翻译成中文。如果你发现实验中输出的日志信息含有英文，而你希望将它翻译成方便阅读的中文，可以模仿已有条目增加新的翻译项。也可以对已有项进行删改。
-# SelfCheck_Client
-实验开始前，应当检查各项设备是否运行正常。该脚本中提供了多种常用的设备检查命令。你也可以照例增添新设备的检查命令。
-# Setup
-一般仅初次部署时需要运行该函数，生成默认的Experiment_Client、SelfCheck_Client、LogTranslate和UIDs
-# UIDs
-该枚举类中记录了和Arduino端完全一致的UID密码表，供MATLAB端参考，识别从串口发来的字节编码。如果要修改UID密码表，应当在Arduino端修改UIDs.h，然后运行GenerateMatlabUIDs.mlx，自动生成UIDs.m，不要手动修改该文件。</param.description>
+ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
     <param.version>4.0.0</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
@@ -122,8 +55,7 @@ StartSession：开始会话
 % **/*.bak
 %
 .git*
-DebugOnly
-resources/project</param.exclude.filters>
+resources</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />
@@ -138,18 +70,18 @@ resources/project</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="7.4.2" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
+        <requiredAddOn earliest="7.5.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱的 MATLAB 扩展 Extension</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
     <param.matlab.project.name />
-    <param.release.start>R2021b</param.release.start>
+    <param.release.start>R2021a</param.release.start>
     <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
     <param.compatiblity.windows>true</param.compatiblity.windows>
-    <param.compatiblity.macos>true</param.compatiblity.macos>
-    <param.compatiblity.linux>true</param.compatiblity.linux>
-    <param.compatiblity.matlabonline>true</param.compatiblity.matlabonline>
+    <param.compatiblity.macos>false</param.compatiblity.macos>
+    <param.compatiblity.linux>false</param.compatiblity.linux>
+    <param.compatiblity.matlabonline>false</param.compatiblity.matlabonline>
     <param.installation.map />
     <param.additional.sw.names />
     <param.additional.sw.licenses />
@@ -171,9 +103,6 @@ resources/project</param.exclude.filters>
       <param.matlab.project.name />
       <param.release.current.only />
       <param.compatiblity.windows />
-      <param.compatiblity.macos />
-      <param.compatiblity.linux />
-      <param.compatiblity.matlabonline />
       <param.installation.map />
       <param.additional.sw.names />
       <param.additional.sw.licenses />
@@ -186,12 +115,10 @@ resources/project</param.exclude.filters>
     </fileset.rootdir>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}\+Gbec</file>
-      <file>${PROJECT_ROOT}\Clients</file>
       <file>${PROJECT_ROOT}\doc</file>
-      <file>${PROJECT_ROOT}\Gbec</file>
       <file>${PROJECT_ROOT}\README.md</file>
-      <file>${PROJECT_ROOT}\resources</file>
       <file>${PROJECT_ROOT}\工具箱图像.png</file>
+      <file>${PROJECT_ROOT}\部署</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded>

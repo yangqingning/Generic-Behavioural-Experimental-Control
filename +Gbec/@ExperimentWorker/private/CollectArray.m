@@ -1,10 +1,6 @@
 function Array=CollectArray(Serial)
 import Gbec.UIDs
 switch Serial.read(1,"uint8")
-	case UIDs.Type_UIDs
-		ArrayLength=UIDs(Serial.read(1,"uint8"));
-	case UIDs.Type_bool
-		ArrayLength=logical(Serial.read(1,"uint8"));
 	case UIDs.Type_uint8_t
 		ArrayLength=Serial.read(1,"uint8");
 	case UIDs.Type_uint16_t
@@ -17,7 +13,7 @@ switch Serial.read(1,"uint8")
 end
 switch Serial.read(1,"uint8")
 	case UIDs.Type_UIDs
-		Array=UIDs(Serial.read(ArrayLength,"uint8"));
+		Array=string(UIDs(Serial.read(ArrayLength,"uint8")));
 	case UIDs.Type_bool
 		Array=logical(Serial.read(ArrayLength,"uint8"));
 	case UIDs.Type_uint8_t

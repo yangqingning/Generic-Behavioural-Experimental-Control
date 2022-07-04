@@ -23,7 +23,7 @@ classdef ExperimentWorker<handle
 		%日期时间
 		DateTime
 		%鼠名
-		Mouse
+		Mouse string
 	end
 	properties(Access=private)
 		Serial internal.Serialport
@@ -196,6 +196,8 @@ classdef ExperimentWorker<handle
 			Blocks.DateTime=EW.DateTime;
 			Blocks.Design=string(Design(9:end));
 			Blocks.EventLog={EW.Recorder.GetTimeTable};
+			Blocks.BlockIndex=0x1;
+			Blocks.BlockUID=0x001;
 			Trials=table;
 			Stimulus=EW.TrialRecorder.Harvest;
 			NumTrials=numel(Stimulus);
