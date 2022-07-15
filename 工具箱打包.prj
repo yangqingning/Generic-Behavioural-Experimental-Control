@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\source\repos\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\source\repos\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
+  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
     <param.appname>通用行为实验控制</param.appname>
     <param.authnamewatermark>张天夫</param.authnamewatermark>
     <param.email>vhtmfu@outlook.com</param.email>
@@ -22,7 +22,7 @@
 
 ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>4.0.0</param.version>
+    <param.version>4.0.1</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -70,7 +70,7 @@ resources</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="7.5.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱的 MATLAB 扩展 Extension</requiredAddOn>
+        <requiredAddOn earliest="8.0.1" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -123,16 +123,14 @@ resources</param.exclude.filters>
     <fileset.depfun.included />
     <fileset.depfun.excluded>
       <file>${MATLAB_ROOT}\toolbox\local\userpath.m</file>
-      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\LogTranslate.mlx</file>
-      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\UIDs.m</file>
     </fileset.depfun.excluded>
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="通用行为实验控制.mltbx" optional="false">C:\Users\vhtmf\source\repos\通用行为实验控制\通用行为实验控制.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="通用行为实验控制.mltbx" optional="false">C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\通用行为实验控制.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2022b</root>
+      <root>C:\Program Files\MATLAB\R2022a</root>
       <toolboxes />
     </matlab>
     <platform>
