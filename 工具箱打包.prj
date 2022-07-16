@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\source\repos\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\source\repos\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
+  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
     <param.appname>通用行为实验控制</param.appname>
     <param.authnamewatermark>张天夫</param.authnamewatermark>
     <param.email>vhtmfu@outlook.com</param.email>
@@ -22,7 +22,7 @@
 
 ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>4.0.1</param.version>
+    <param.version>4.0.2</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -127,7 +127,7 @@ resources
     </fileset.depfun.excluded>
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="通用行为实验控制.mltbx" optional="false">C:\Users\vhtmf\source\repos\通用行为实验控制\通用行为实验控制.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="通用行为实验控制.mltbx" optional="false">C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\通用行为实验控制.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
