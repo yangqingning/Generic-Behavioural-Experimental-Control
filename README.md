@@ -1,4 +1,13 @@
-通用行为实验控制，MATLAB与Arduino串口连接
+通用行为实验控制，MATLAB与Arduino串口连接，提供高度可扩展可配置的模块化一站式服务
+# 项目背景
+实验室的自动化行为实验控制大多用Arduino开发板实现。Arduino开发板是一种嵌入式计算机，可以通过杜邦线引脚连接到硬件设备模组，实现对小鼠的感官刺激和行为记录。为了对实验过程编程，需要编写代码。Arduino官方提供IDE，可以将C++代码编译上传到开发板执行。此外，MATLAB也提供Arduino开发工具箱，允许使用MATLAB语言对Arduino开发板进行编程。基于这两套技术栈，我们实验室流传下来大量经典的行为实验控制代码。
+
+但是，这整个生态系统都存在根本性的严重问题：
+- 从 Arduino IDE 上传的C++代码只能在Arduino中执行，无法将收集到的行为数据传回主机进行处理和存储。主机端必须另外配置数据收集解决方案。
+- MATLAB工具箱并不能将MATLAB代码编译成Arduino二进制代码，而是将预编译的服务器上传到Arduino，然后主机端MATLAB通过连接Arduino的USB串口一条一条发送指令，交给Arduino执行。这除了导致只能使用MATLAB提供的指令、无法进行多线程编程以外，指令通过串口的传输也存在延迟，对时间精度要求较高的刺激（例如光遗传激光波形、短暂的水泵给水）无法正确完成。
+- 祖传代码大多为了特定的实验临时编写，代码设计相对固定，可扩展、可配置性极差，缺乏良好的设计思路。
+
+为了解决这些问题，必须重新编写一个横跨Arduino与主机MATLAB两端的桥梁，并采用高度模块化的代码结构设计，并确保将时间精度要求高的过程由Arduino端独立决策完成。于是有此项目。
 
 本实验控制系统分为Arduino服务端和MATLAB客户端两个部分。使用本系统的优越性：
 - 连接PC端和Arduino只为传简单信号，Arduino端独立决策，比用MATLAB端步步操纵Arduino具有更高的时间精度；
@@ -6,7 +15,7 @@
 - 随时暂停、放弃实验，不需要拔插头；
 - 实验过程中意外掉线自动重连，不会丢失进度
 # 配置环境
-安装本工具箱之前需要先安装[Arduino IDE](https://github.com/arduino/arduino-ide/releases)。
+安装本工具箱之前需要先安装[Arduino IDE](https://github.com/arduino/arduino-ide/releases)，以及 Arduino Library Manager 中的TimersOneForAll库。
 
 此外，本实验系统还依赖[埃博拉酱的MATLAB扩展](https://ww2.mathworks.cn/matlabcentral/fileexchange/96344-matlab-extension)。正常情况下，此工具箱在安装本工具箱时会被自动安装。如果安装失败，可以在MATLAB附加功能管理器中安装。
 
@@ -170,68 +179,105 @@ UIDs GetUID() const override;
 ```MATLAB
 import Gbec.*
 ```
-安装阶段生成的Experiment_Client和SelfCheck_Client是你的控制面板。一般先根据脚本中已有的提示信息进行设备检查（SelfCheck_Client），然后开始实验（Experiment_Client）
-## @ExperimentWorker
-实验主控制器
+安装阶段生成的Development_Client, Experiment_Client和SelfCheck_Client是你的控制面板。一般先根据脚本中已有的提示信息进行Arduino端配置、设备检查（SelfCheck_Client），然后开始实验（Experiment_Client）
 
-一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
-### 对象属性
-SavePath(1,1)string，实验记录保存路径
+每个类/函数的详细文档可用doc命令查看。以下列出公开接口：
 
-RetryInterval(1,1)double=2，断线重连尝试间隔秒数
-
-MaxRetryTimes(1,1)uint8=3，断线重连尝试次数
-
-SaveFile(1,1)logical，实验结束后是否保存记录
-
-EndMiaoCode(1,1)string=""，喵提醒码
-
-HttpRetryTimes(1,1)uint8=3，喵提醒重试次数
-
-ShutDownSerialAfterSession(1,1)logical，会话结束后是否自动关闭串口
-
-Session(1,1)UIDs，当前运行会话
-
-VideoInput，视频输入设备
-
-SerialFreeTime(1,1)double，如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
-### 对象方法
-PauseSession：暂停会话
-
-ContinueSession：继续会话
-
-AbortSession：放弃会话
-
-CloseSerial：关闭串口
-
-StartCheckMonitor：开始检查监视器。输入参数：DeviceUID(1,1)UIDs，设备标识符
-
-StopCheckMonitor：停止检查监视器
-
-OneEnterOneCheck：检查刺激器，按一次回车给一个刺激，输入任意字符停止检查。输入参数：
-- DeviceUID(1,1)UIDs，设备标识符
-- EnterPrompt(1,1)string，提示文字，将显示在命令行中
-
-CheckManyTimes：多次检查刺激器。输入参数：
-- DeviceUID(1,1)UIDs，设备标识符
-- CheckTimes(1,1)uint8，检查次数
-
-GetInformation：获取会话信息。返回值：Information(1,1)struct，信息结构体
-
-SaveInformation：获取并保存会话信息，输出为UniExp格式文件，文件名符合MTE标准
-
-SerialInitialize：初始化串口。输入参数：SerialPort(1,1)string，串口名称
-
-StartSession：开始会话
-## Experiment_Client
-实验主控台脚本。在这里完成相关配置，并开始实验。通常你需要设定好串口号，选择要运行的会话，设置保存路径，是否自动关闭串口，设置喵提醒码（如果要用），视频拍摄设置。实验进程中，如需暂停、放弃、继续、返回信息、断开串口等操作，则运行脚本中相应节。
-## GenerateMatlabUIDs
-如果你更新了Arduino端的UIDs.h，则需要在MATLAB端重新生成UIDs.m，执行此函数。
-## LogTranslate
-该函数用于将输出的英文日志翻译成中文。如果你发现实验中输出的日志信息含有英文，而你希望将它翻译成方便阅读的中文，可以模仿已有条目增加新的翻译项。也可以对已有项进行删改。
-## SelfCheck_Client
-实验开始前，应当检查各项设备是否运行正常。该脚本中提供了多种常用的设备检查命令。你也可以照例增添新设备的检查命令。
-## Setup
-一般仅初次部署时需要运行该函数，生成默认的Experiment_Client、SelfCheck_Client和Development_Client
-# UIDs
-该枚举类中记录了和Arduino端完全一致的UID密码表，供MATLAB端参考，识别从串口发来的字节编码。如果要修改UID密码表，应当在Arduino端修改UIDs.h，然后运行GenerateMatlabUIDs.mlx，自动生成UIDs.m，不要手动修改该文件。
+类
+```MATLAB
+classdef ExperimentWorker<handle
+    %实验主控制器
+    %一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
+	properties
+		%实验记录保存路径
+		SavePath(1,1)string
+		%断线重连尝试间隔秒数
+		RetryInterval(1,1)double=2
+		%断线重连尝试次数
+		MaxRetryTimes(1,1)uint8=3
+		%实验结束后是否保存记录
+		SaveFile(1,1)logical
+		%喵提醒码
+		EndMiaoCode(1,1)string=""
+		%喵提醒重试次数
+		HttpRetryTimes(1,1)uint8=3
+		%会话结束后是否自动关闭串口
+		ShutDownSerialAfterSession(1,1)logical
+		%当前运行会话
+		Session(1,1)Gbec.UIDs
+		%视频输入设备
+		VideoInput
+		%日期时间
+		DateTime
+		%鼠名
+		Mouse string
+	end
+	properties(Dependent)
+		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
+		SerialFreeTime(1,1)double
+	end
+	methods
+		function obj=ExperimentWorker
+		end
+		function PauseSession(EW)
+			%暂停会话
+		end
+		function ContinueSession(EW)
+			%继续会话
+		end
+		function AbortSession(EW)
+			%放弃会话
+		end
+		function CloseSerial(EW,~,~)
+			%关闭串口
+		end
+		function StartCheckMonitor(EW,DeviceUID)
+			%开始检查监视器
+		end
+		function StopCheckMonitor(EW)
+			%停止检查监视器
+		end
+		function OneEnterOneCheck(EW,DeviceUID,EnterPrompt)
+			%检查刺激器，按一次回车给一个刺激，输入任意字符停止检查
+		end
+		function CheckManyTimes(EW,DeviceUID,CheckTimes)
+			%多次检查刺激器
+		end
+		function Information = GetInformation(EW)
+			%获取会话信息
+		end
+		function SaveInformation(EW)
+			%获取并保存会话信息
+		end
+		function SerialInitialize(EW,SerialPort)
+			%初始化串口
+		end
+		function StartSession(EW)
+			%开始会话
+		end
+	end
+end
+classdef UIDs<uint8
+	%该枚举类中记录了和Arduino端完全一致的UID密码表，供MATLAB端参考，识别从串口发来的字节编码。如果要修改UID密码表，应当在Arduino端修改UIDs.h，然后运行GenerateMatlabUIDs.mlx，自动生成UIDs.m，不要手动修改该文件。
+end
+```
+函数
+```MATLAB
+%本函数尝试修复 Arduino C++ 标准配置错误的问题。Arduino默认使用C++11标准编译，但本工具箱的Arduino代码使用了C++17新特性，因此必须改用C++17标准编译。
+function ArduinoCppStandard
+%根据Arduino端的UIDs.h，生成MATLAB端的UIDs.m
+function GenerateMatlabUIDs
+%安装通用行为控制工具箱的向导
+function Setup
+%该函数用于将输出的英文日志翻译成中文。如果你发现实验中输出的日志信息含有英文，而你希望将它翻译成方便阅读的中文，可以模仿已有条目增加新的翻译项。也可以对已有项进行删改。
+function LogTranslate
+```
+脚本
+```MATLAB
+%此脚本用于Arduino端相关的配置，如代码上传、错误排除等
+Development_Client
+%实验主控台脚本。在这里完成相关配置，并开始实验。通常你需要设定好串口号，选择要运行的会话，设置保存路径，是否自动关闭串口，设置喵提醒码（如果要用），视频拍摄设置。实验进程中，如需暂停、放弃、继续、返回信息、断开串口等操作，则运行脚本中相应节。
+Experiment_Client
+%实验开始前，应当检查各项设备是否运行正常。该脚本中提供了多种常用的设备检查命令。你也可以照例增添新设备的检查命令。
+SelfCheck_Client
+```
