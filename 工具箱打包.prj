@@ -124,8 +124,6 @@ resources
     <fileset.depfun.included />
     <fileset.depfun.excluded>
       <file>${MATLAB_ROOT}\toolbox\local\userpath.m</file>
-      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\LogTranslate.mlx</file>
-      <file>C:\Users\vhtmf\Documents\MATLAB\+GeneralBehaviorControl\UIDs.m</file>
     </fileset.depfun.excluded>
     <fileset.package />
     <build-deliverables>
