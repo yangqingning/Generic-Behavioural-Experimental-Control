@@ -124,7 +124,7 @@ classdef ExperimentWorker<handle
 		end
 		function StartCheckMonitor(EW,DeviceUID)
 			%开始检查监视器
-			%输入参数：DeviceUID(1,1)UIDs，设备标识符
+			%输入参数：DeviceUID(1,1)Gbec.UIDs，设备标识符
 			EW.WatchDog.stop;
 			EW.Serial.write(Gbec.UIDs.Command_CheckDevice,"uint8");
 			EW.FindDevice(DeviceUID);
@@ -147,7 +147,7 @@ classdef ExperimentWorker<handle
 		function OneEnterOneCheck(EW,DeviceUID,EnterPrompt)
 			%检查刺激器，按一次回车给一个刺激，输入任意字符停止检查
 			%输入参数：
-			%DeviceUID(1,1)UIDs，设备标识符
+			%DeviceUID(1,1)Gbec.UIDs，设备标识符
 			%EnterPrompt(1,1)string，提示文字，将显示在命令行中
 			import Gbec.UIDs
 			EW.WatchDog.stop;
@@ -161,7 +161,7 @@ classdef ExperimentWorker<handle
 		function CheckManyTimes(EW,DeviceUID,CheckTimes)
 			%多次检查刺激器
 			%输入参数：
-			%DeviceUID(1,1)UIDs，设备标识符
+			%DeviceUID(1,1)Gbec.UIDs，设备标识符
 			%CheckTimes(1,1)uint8，检查次数
 			EW.WatchDog.stop;
 			EW.Serial.write(Gbec.UIDs.Command_CheckDevice,"uint8");
@@ -188,6 +188,7 @@ classdef ExperimentWorker<handle
 		function SaveInformation(EW)
 			%获取并保存会话信息
 			DateTimes=table;
+			EW.DateTime.Second=0;
 			DateTimes.DateTime=EW.DateTime;
 			DateTimes.Mouse=EW.Mouse;
 			DateTimes.Metadata={EW.GetInformation};

@@ -7,7 +7,7 @@ while true
 	else
 		switch Signal
 			case UIDs.Type_UIDs
-				Struct.(Field)=UIDs(Serial.read(1,"uint8"));
+				Struct.(Field)=string(UIDs(Serial.read(1,"uint8")));
 			case UIDs.Type_bool
 				Struct.(Field)=logical(Serial.read(1,"uint8"));
 			case UIDs.Type_uint8_t

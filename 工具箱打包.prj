@@ -22,7 +22,7 @@
 
 ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>4.0.0</param.version>
+    <param.version>4.0.1</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -55,7 +55,8 @@ ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明
 % **/*.bak
 %
 .git*
-resources</param.exclude.filters>
+resources
+**/*.asv</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />
@@ -70,7 +71,7 @@ resources</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="7.5.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱的 MATLAB 扩展 Extension</requiredAddOn>
+        <requiredAddOn earliest="8.0.1" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱的 MATLAB 扩展 Extension(2)</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
