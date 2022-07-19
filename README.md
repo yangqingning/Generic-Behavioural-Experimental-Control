@@ -15,7 +15,7 @@
 - 随时暂停、放弃实验，不需要拔插头；
 - 实验过程中意外掉线自动重连，不会丢失进度
 # 配置环境
-安装本工具箱之前需要先安装[Arduino IDE](https://github.com/arduino/arduino-ide/releases)，以及 Arduino Library Manager 中的TimersOneForAll库。
+安装本工具箱之前需要先安装[Arduino IDE 2.0.0-rc8 以上版本](https://github.com/arduino/arduino-ide/releases)，以及 Arduino Library Manager 中的TimersOneForAll库。
 
 此外，本实验系统还依赖[埃博拉酱的MATLAB扩展](https://ww2.mathworks.cn/matlabcentral/fileexchange/96344-matlab-extension)。正常情况下，此工具箱在安装本工具箱时会被自动安装。如果安装失败，可以在MATLAB附加功能管理器中安装。
 

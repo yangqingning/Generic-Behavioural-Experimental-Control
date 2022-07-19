@@ -22,7 +22,7 @@
 
 ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>4.0.3</param.version>
+    <param.version>4.0.4</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -31,7 +31,7 @@ ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明
       <item>78</item>
     </param.products.id>
     <param.products.version>
-      <item>6.6</item>
+      <item>6.5</item>
     </param.products.version>
     <param.platforms />
     <param.guid>f71ce85b-534c-47de-8ccf-50d6a66605a3</param.guid>
@@ -131,7 +131,7 @@ resources
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2022a</root>
+      <root>C:\Program Files\MATLAB\R2021b</root>
       <toolboxes />
     </matlab>
     <platform>
