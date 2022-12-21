@@ -22,7 +22,7 @@
 
 ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>4.0.5</param.version>
+    <param.version>5.0.0</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -76,7 +76,7 @@ resources
     </param.required.addons>
     <param.matlab.project.id />
     <param.matlab.project.name />
-    <param.release.start>R2021a</param.release.start>
+    <param.release.start>R2022b</param.release.start>
     <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
     <param.compatiblity.windows>true</param.compatiblity.windows>
@@ -116,6 +116,7 @@ resources
     </fileset.rootdir>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}\+Gbec</file>
+      <file>${PROJECT_ROOT}\.vscode</file>
       <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\README.md</file>
       <file>${PROJECT_ROOT}\工具箱图像.png</file>
@@ -132,7 +133,14 @@ resources
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2022b</root>
-      <toolboxes />
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
     </matlab>
     <platform>
       <unix>false</unix>

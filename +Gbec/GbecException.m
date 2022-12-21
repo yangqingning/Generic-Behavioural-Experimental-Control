@@ -1,0 +1,23 @@
+classdef GbecException<MATLAB.IEnumerableException
+	enumeration
+		Serial_handshake_failed
+		Test_not_found_on_Arduino
+		Unexpected_response_from_Arduino
+		Last_test_not_running_or_unstoppable
+		Session_not_found_on_Arduino
+		No_sessions_are_running
+		Cannot_test_while_session_running
+		Cannot_pause_a_paused_session
+		Cannot_pause_an_aborted_session
+		Cannot_pause_a_finished_session
+		Cannot_continue_a_running_session
+		Cannot_continue_an_aborted_session
+		Cannot_continue_a_finished_session
+		Cannot_abort_an_aborted_session
+		Cannot_abort_a_finished_session
+		Must_run_session_before_getting_information
+		There_is_already_a_session_running
+		There_is_already_a_session_being_paused
+		Disconnection_reconnection_failed
+	end
+end

@@ -1,37 +1,28 @@
 #pragma once
-#include <Arduino.h>
-template <typename Type, Type Value>
-void SerialWrite()
+template <typename Type>
+inline void SerialWrite(const Type &Value)
 {
-	Type V = Value;
-	Serial.write((uint8_t *)&V, sizeof(Type));
+  Serial.write((uint8_t *)&Value, sizeof(Type));
 }
 template <typename Type>
-void SerialWrite(Type Value)
+inline void SerialWrite(Type *Buffer, uint8_t Number)
 {
-	Serial.write((uint8_t *)&Value, sizeof(Type));
-}
-template <typename Type>
-void SerialWrite(Type *Buffer, uint8_t Number)
-{
-	Serial.write((uint8_t *)Buffer, sizeof(Type) * Number);
+  Serial.write((uint8_t *)Buffer, sizeof(Type) * Number);
 }
 template <typename Type>
 Type SerialRead()
 {
-	Type Buffer;
-	Serial.readBytes((uint8_t *)&Buffer, sizeof(Type));
-	return Buffer;
+  Type Buffer;
+  Serial.readBytes((uint8_t *)&Buffer, sizeof(Type));
+  return Buffer;
 }
 template <typename Type>
-Type SerialRead(Type &Value)
+inline void SerialRead(Type &Value)
 {
-	Serial.readBytes((uint8_t *)&Value, sizeof(Type));
-	return Value;
+  Serial.readBytes((uint8_t *)&Value, sizeof(Type));
 }
 template <typename Type>
-Type *SerialRead(Type *Buffer, uint8_t Number)
+inline void SerialRead(Type *Buffer, uint8_t Number)
 {
-	Serial.readBytes((uint8_t *)Buffer, sizeof(Type) * Number);
-	return Buffer;
+  Serial.readBytes((uint8_t *)Buffer, sizeof(Type) * Number);
 }
