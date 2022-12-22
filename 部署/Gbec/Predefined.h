@@ -403,7 +403,9 @@ class Trial : public ITrial {
   }
 
 public:
-  static constexpr auto Info = InfoStruct(Info_UID, TUID, Info_Steps, InfoCell(TSteps::Info...));
+  void WriteInfo() const override {
+    SerialWrite(InfoStruct(Info_UID, TUID, Info_Steps, InfoCell(TSteps::Info...)));
+  }
   constexpr Trial()
     : ITrial(TUID) {}
   void Setup() const override {
@@ -441,7 +443,6 @@ template<uint16_t Value>
 using N = std::integral_constant<uint16_t, Value>;
 template<typename... Trials>
 struct TrialArray {
-  constexpr static auto Info = InfoCell(Trials::Info...);
   static const ITrial *Interfaces[sizeof...(Trials)];
 };
 // 静态成员必须类外定义，即使模板也一样
@@ -460,10 +461,10 @@ struct TrialNumberSplit<TTrial, TNumber> {
   constexpr static Numbers_t Numbers = Numbers_t();  // 必须显式初始化不然不过编译
 };
 template<UID TUID, bool TRandom, typename... TrialThenNumber>
-class Session : public ISession {
+struct Session : public ISession {
   using TNS = TrialNumberSplit<TrialThenNumber...>;
   static bool &NeedSetup;
-  constexpr static uint8_t NumDistinctTrials = sizeof(TNS::Numbers.Array);
+  constexpr static uint8_t NumDistinctTrials = std::extent_v<decltype(TNS::Numbers.Array)>;
   static void ArrangeAndRun(const uint16_t *TrialsLeft) {
     TrialQueue.resize(std::accumulate(TrialsLeft, TrialsLeft + NumDistinctTrials, uint16_t(0)));
     const ITrial **TQPointer = TrialQueue.data();
@@ -475,7 +476,7 @@ class Session : public ISession {
     }
     NeedSetup = false;
     if (TRandom)
-      std::shuffle(TrialQueue.data(), TQPointer, std::ArduinoUrng());
+      std::shuffle(TrialQueue.data(), TQPointer, Urng);
     TrialsDone = 0;
     RunAsync();
   }
@@ -483,10 +484,18 @@ class Session : public ISession {
 public:
   constexpr Session()
     : ISession(TUID) {}
-  uint8_t GetInfo(const void *&Info) const override {
-    constexpr InfoStruct IS(Info_UID, TUID, Info_Random, TRandom, Info_DistinctTrials, TNS::Trials_t::Info, Info_NumTrials, TNS::Numbers);
-    Info = &IS;
-    return sizeof(IS);
+  void WriteInfo() const override {
+    //这里内存不足了，只好拆开
+    SerialWrite<uint8_t>(4);
+    SerialWrite(InfoFields(Info_UID, TUID, Info_Random, TRandom));
+    SerialWrite(Info_DistinctTrials);
+    SerialWrite(Type_Cell);
+    SerialWrite(NumDistinctTrials);
+    for (const ITrial *T : TNS::Trials_t::Interfaces) {
+      SerialWrite(Type_Struct);
+      T->WriteInfo();
+    }
+    SerialWrite(InfoFields(Info_NumTrials, TNS::Numbers));
   }
   void Start() const override {
     ArrangeAndRun(TNS::Numbers.Array);

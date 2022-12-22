@@ -1,19 +1,19 @@
-function InterruptRetry(EW,~)
+function InterruptRetry(obj,~,~)
 import Gbec.UID
 import Gbec.GbecException
-RunningOrPaused=EW.State==UID.SessionRunning||EW.State==UID.SessionPaused;
+RunningOrPaused=obj.State==UID.State_SessionRunning||obj.State==UID.State_SessionPaused;
 if RunningOrPaused
-	EW.EventRecorder.LogEvent(UID.Event_SerialInterrupt);
+	obj.EventRecorder.LogEvent(UID.Event_SerialInterrupt);
 end
-Suffix="/"+string(EW.MaxRetryTimes)+"次";
-SerialPort=EW.Serial.Port;
+Suffix="/"+string(obj.MaxRetryTimes)+"次";
+SerialPort=obj.Serial.Port;
 fprintf("串口连接中断");
 ReconnectFail=true;
-for a=1:EW.MaxRetryTimes
+for a=1:obj.MaxRetryTimes
 	disp("，正尝试恢复连接第"+string(a)+Suffix);
-	pause(EW.RetryInterval);
+	pause(obj.RetryInterval);
 	try
-		EW.SerialInitialize(SerialPort);
+		obj.SerialInitialize(SerialPort);
 		ReconnectFail=false;
 		break;
 	catch
@@ -21,15 +21,16 @@ for a=1:EW.MaxRetryTimes
 	end
 end
 if ReconnectFail
-	GbecException.Disconnection_reconnection_failed.Throw;
+	%这里如果报错，会显示大量堆栈信息，所以不报错了
+	fprintf('\n重新连接失败');
 end
 disp("重新连接成功");
 if RunningOrPaused
-	EW.EventRecorder.LogEvent(UID.Event_SerialReconnect);
-	if EW.State==UID.State_SessionRunning
-		EW.RestoreSession;
+	obj.EventRecorder.LogEvent(UID.Event_SerialReconnect);
+	if obj.State==UID.State_SessionRunning
+		obj.RestoreSession;
 	else
-		EW.State=UID.State_SessionRestored;
+		obj.State=UID.State_SessionRestored;
 	end
 end
 end

@@ -106,6 +106,12 @@ enum UID : uint8_t {
   Signal_StartRecord,
   Signal_AirPuff,
   Signal_InfoStart,
+  Signal_ApiFound,
+  Signal_ApiInvalid,
+  Signal_Debug1,
+  Signal_Debug2,
+  Signal_Debug3,
+  Signal_Debug4,
 
   // 测试UID
 

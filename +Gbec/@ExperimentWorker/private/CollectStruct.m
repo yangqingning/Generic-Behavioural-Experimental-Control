@@ -3,7 +3,8 @@ import Gbec.UID
 NumFields=Serial.read(1,'uint8');
 Struct=struct;
 for F=1:NumFields
-	Name=char(UID(Serial.read(1,'uint8')));
+	Name=Serial.read(1,'uint8');
+	Name=char(UID(Name));
 	switch UID(Serial.read(1,'uint8'))
 		case UID.Type_UID
 			Value=string(UID(Serial.read(1,'uint8')));
@@ -42,6 +43,7 @@ switch UID(Serial.read(1,'uint8'))
 end
 end
 function Cell=CollectCell(Serial)
+import Gbec.UID
 NumCells=Serial.read(1,'uint8');
 Cell=cell(NumCells,1);
 for C=1:NumCells

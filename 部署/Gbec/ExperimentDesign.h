@@ -12,6 +12,8 @@ Pin pAirPuff = 7;
 Pin pCapacitorVdd = 22;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
+//使用一个模拟输入引脚获取随机种子，这个引脚应该是空闲状态
+Pin pRandomPin = 1;
 
 // 关于计时器参数TimerCode。Arduino Mega 有0~5共6个计时器，其中1、3、4、5精度最高，2其次，0最低。应尽可能使用高精度计时器。必须使用低精度计时器的情况下，尽量给单次工作时间较长的设备分配高精度计时器。对于不可能同时工作的硬件，可以共享计时器；对于有可能需要同时工作的硬件，必须使用不同的计时器，否则会发生冲突。
 
@@ -187,6 +189,6 @@ const auto& SessionMap = SessionMap_t<
 	*/
   Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
-  Session<Session_LightWater, false, tLightWater, N<30>>,
+  Session<Session_LightWater, false, tLightWater, N<2>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,
   Session<Session_LightAir, false, tLightAir, N<30>> >;

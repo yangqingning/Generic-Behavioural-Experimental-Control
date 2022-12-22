@@ -1,45 +1,49 @@
-function RunningCallback(EW,~,~)
+function RunningCallback(obj,~,~)
 import Gbec.UID
-while EW.Serial.NumBytesAvailable
-	EventUID=EW.Serial.read(1,'uint8');
+while obj.Serial.NumBytesAvailable
+	EventUID=obj.Serial.read(1,'uint8');
 	switch EventUID
 		case UID.Signal_TrialStart
-			TrialIndex=EW.Serial.read(1,'uint16');
-			TrialUID=string(Gbec.LogTranslate(EW.Serial.read(1,'uint8')));
-			EW.TrialRecorder.LogEvent(TrialUID);
-			if ~isempty(EW.VideoInput)
-				if EW.VideoInput.Logging=="off"
-					trigger(EW.VideoInput);
+			TrialIndex=obj.Serial.read(1,'uint16')+1;
+			TrialUID=char(UID(obj.Serial.read(1,'uint8')));
+			TrialUID=string(TrialUID(7:end));
+			obj.TrialRecorder.LogEvent(TrialUID);
+			if ~isempty(obj.VideoInput)
+				if obj.VideoInput.Logging=="off"
+					trigger(obj.VideoInput);
 				end
 			end
-			fprintf('\n回合%u-%s：',TrialIndex,Gbec.LogTranslate(TrialUID));
-		case UID.SessionFinished
-			if EW.EndMiaoCode~=""
-				for a=0:EW.HttpRetryTimes
+			fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
+		case UID.State_SessionFinished
+			if obj.EndMiaoCode~=""
+				for a=0:obj.HttpRetryTimes
 					try
-						Request.send("http://miaotixing.com/trigger?id="+EW.EndMiaoCode,HttpOptions);
+						Request.send("http://miaotixing.com/trigger?id="+obj.EndMiaoCode,HttpOptions);
 					catch
 						continue;
 					end
 					break;
 				end
 			end
-			if ~isempty(EW.VideoInput)
-				stop(EW.VideoInput);
+			if ~isempty(obj.VideoInput)
+				stop(obj.VideoInput);
 			end
-			fprintf('\n会话完成');
-			if EW.SaveFile
-				EW.SaveInformation;
+			fprintf('\n会话完成\n');
+			if obj.SaveFile
+				obj.SaveInformation;
 			else
 				fprintf(" 数据未保存");
 			end
 			fprintf('\n');
-			EW.Serial.configureCallback('off');
-			EW.WatchDog.start;
-			EW.State=UID.State_SessionFinished;
+			obj.Serial.configureCallback('off');
+			if obj.ShutDownSerialAfterSession
+				obj.WatchDog.start;
+			end
+			obj.State=UID.State_SessionFinished;
 		otherwise
-			EW.EventRecorder.LogEvent(EventUID);
-			fprintf(' %s',Gbec.LogTranslate(EventUID));
+			EventUID=Gbec.LogTranslate(UID(EventUID));
+			obj.EventRecorder.LogEvent(EventUID);
+			fprintf(' %s',EventUID);
 	end
 end
 end

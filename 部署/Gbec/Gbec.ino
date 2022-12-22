@@ -5,21 +5,24 @@ void SessionFinish() {
   SerialWrite(State = State_SessionFinished);
 }
 void setup() {
-  randomSeed(analogRead(0));
+  ISession::Setup(SessionFinish, analogRead(pRandomPin));
   Serial.setTimeout(-1);
   Serial.begin(9600);
   // PC端无法确认何时初始化完毕，不能提前发送信号，必须等待Arduino端宣布初始化完毕
   SerialWrite(Signal_SerialReady);
-  ISession::Setup(SessionFinish);
 }
 const ISession *CurrentSession;
 void Start() {
   const UID SessionUID = SerialRead<UID>();
-  if (State == State_SessionRunning || State == State_SessionPaused)
-    return State;
+  if (State == State_SessionRunning || State == State_SessionPaused) {
+    SerialWrite(State);
+    return;
+  }
   const auto Query = SessionMap.find(SessionUID);
-  if (Query == SessionMap.end())
-    return Signal_NoSuchSession;
+  if (Query == SessionMap.end()) {
+    SerialWrite(Signal_NoSuchSession);
+    return;
+  }
   CurrentSession = (*Query).second;
   State = State_SessionRunning;
   SerialWrite(Signal_SessionStarted);
@@ -33,7 +36,7 @@ void Pause() {
   SerialWrite(State);
 }
 void Continue() {
-  if (State = State_SessionPaused) {
+  if (State == State_SessionPaused) {
     SerialWrite(Signal_SessionContinue);
     State = State_SessionRunning;
     CurrentSession->Continue();
@@ -50,25 +53,25 @@ void Abort() {
 void Peek() {
   SerialWrite(State);
 }
-void WriteInfoOfSession(const ISession *S) {
-  const void *Info;
-  const uint8_t NumBytes = S->GetInfo(Info);
-  SerialWrite(Signal_InfoStart);
-  SerialWrite((uint8_t *)Info, NumBytes);
-}
 void GetInfo() {
   const UID SessionUID = SerialRead<UID>();
-  if (SessionUID == Session_Current) {
+  if (State == State_SessionRunning)
+    SerialWrite(State);
+  else if (SessionUID == Session_Current) {
     if (State == State_SessionInvalid)
       SerialWrite(State);
-    else
-      WriteInfoOfSession(CurrentSession);
+    else {
+      SerialWrite(Signal_InfoStart);
+      CurrentSession->WriteInfo();
+    }
   } else {
     const auto Query = SessionMap.find(SessionUID);
     if (Query == SessionMap.end())
       SerialWrite(Signal_NoSuchSession);
-    else
-      WriteInfoOfSession((*Query).second);
+    else {
+      SerialWrite(Signal_InfoStart);
+      (*Query).second->WriteInfo();
+    }
   }
 }
 void Restore() {
@@ -152,5 +155,10 @@ void loop() {
     TestStop,
     IsReady,
   };
-  APIs[SerialRead<uint8_t>()]();
+  const uint8_t API = SerialRead<uint8_t>();
+  if (API < std::extent_v<decltype(APIs)>) {
+    SerialWrite(Signal_ApiFound);
+    APIs[API]();
+  } else
+    SerialWrite(Signal_ApiInvalid);
 }
