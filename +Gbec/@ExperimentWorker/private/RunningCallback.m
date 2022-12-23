@@ -5,14 +5,9 @@ while obj.Serial.NumBytesAvailable
 	switch EventUID
 		case UID.Signal_TrialStart
 			TrialIndex=obj.Serial.read(1,'uint16')+1;
-			TrialUID=char(UID(obj.Serial.read(1,'uint8')));
-			TrialUID=string(TrialUID(7:end));
+			TrialUID=UID(obj.Serial.read(1,'uint8'));
+			%这里必须记录UID而不是字符串，因为还要用于断线重连
 			obj.TrialRecorder.LogEvent(TrialUID);
-			if ~isempty(obj.VideoInput)
-				if obj.VideoInput.Logging=="off"
-					trigger(obj.VideoInput);
-				end
-			end
 			fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
 		case UID.State_SessionFinished
 			if obj.EndMiaoCode~=""
@@ -40,10 +35,18 @@ while obj.Serial.NumBytesAvailable
 				obj.WatchDog.start;
 			end
 			obj.State=UID.State_SessionFinished;
+		case UID.Signal_StartRecord
+			if isempty(obj.VideoInput)
+				Gbec.GbecException.Cannot_record_without_VideoInput.Throw;
+			else
+				if obj.VideoInput.Logging=="off"
+					trigger(obj.VideoInput);
+				end
+			end
 		otherwise
-			EventUID=Gbec.LogTranslate(UID(EventUID));
-			obj.EventRecorder.LogEvent(EventUID);
-			fprintf(' %s',EventUID);
+			%为了与TrialUID保持一致，这里也记录UID而不是字符串
+			obj.EventRecorder.LogEvent(UID(EventUID));
+			fprintf(' %s',Gbec.LogTranslate(EventUID));
 	end
 end
 end

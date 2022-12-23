@@ -93,7 +93,7 @@ template<typename ToAdd, typename Container>
 struct _AddToArray;
 template<typename ToAdd, template<typename...> typename Container, typename... AlreadyIn>
 struct _AddToArray<ToAdd, Container<AlreadyIn...>> {
-  using Result = Container<AlreadyIn..., ToAdd>;
+  using Result = Container<ToAdd,AlreadyIn...>;
 };
 template<typename ToAdd, typename Container>
 using AddToArray = typename _AddToArray<ToAdd, Container>::Result;

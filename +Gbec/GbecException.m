@@ -22,5 +22,6 @@ classdef GbecException<MATLAB.IEnumerableException
 		Cannot_OneEnterOneCheck_on_manual_stopped_test
 		Arduino_received_unsupported_API_code
 		Cannot_get_information_while_session_running
+		Cannot_record_without_VideoInput
 	end
 end

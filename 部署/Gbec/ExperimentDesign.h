@@ -5,11 +5,11 @@
 // 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
 
 Pin pCD1 = 9;
-Pin pBlueLed = 3;
-Pin pActiveBuzzer = 6;
-Pin pWaterPump = 8;
-Pin pAirPuff = 7;
-Pin pCapacitorVdd = 22;
+Pin pBlueLed = 8;
+Pin pActiveBuzzer = 22;
+Pin pWaterPump = 2;
+Pin pAirPuff = 12;
+Pin pCapacitorVdd = 7;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
 //使用一个模拟输入引脚获取随机种子，这个引脚应该是空闲状态
@@ -85,8 +85,8 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 
 using sLight = PinFlashStep<pBlueLed, 3, 200, S<Signal_LightUp>, S<Signal_LightDown>, Step_Light>;
 using sAudio = PinFlashStep<pActiveBuzzer, 3, 200, S<Signal_AudioUp>, S<Signal_AudioDown>, Step_Audio>;
-using sWater = PinFlashStep<pWaterPump, 4, 150, S<Signal_WaterOffered>, NullStep, Step_Water>;
-using sAir = PinFlashStep<pAirPuff, 4, 150, S<Signal_AirPuff>, NullStep, Step_Air>;
+using sWater = PinFlashStep<pWaterPump, 3, 150, S<Signal_WaterOffered>, NullStep, Step_Water>;
+using sAir = PinFlashStep<pAirPuff, 3, 150, S<Signal_AirPuff>, NullStep, Step_Air>;
 using sTag = PinFlashStep<pCD1, 4, 200, NullStep, NullStep, Step_Tag>;
 
 /*监视类步骤
@@ -102,6 +102,7 @@ Milliseconds，要监视的毫秒数
 Flags，用按位或（|）符号组合多个可选功能旗帜。可选以下功能：
 - Monitor_ReportOnce，只汇报第1次命中，以后再命中就不再汇报。如不指定此旗帜，将在步骤结束前重复汇报每次命中。
 - Monitor_HitAndFinish，只要发现1次命中，汇报后立即结束步骤，不等待时间结束。如不指定此旗帜，将总是等待指定毫秒数结束，无论命中情况如何。
+- 0，不指定任何旗帜
 
 HitReporter，用于汇报命中的步骤。可以使用使用S<Signal>语法写串口，或者NullStep表示无需汇报。
 MissReporter，用于汇报错失的步骤。必须指定Monitor_ReportMiss旗帜，此参数才有效。可以使用使用S<Signal>语法写串口，或者NullStep表示无需汇报。
@@ -109,6 +110,7 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
 using sMonitorLick = MonitorStep<pCapacitorOut, 5, 1000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
+using sResponseWindow = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
 
 /*等待类步骤
 
@@ -175,6 +177,7 @@ using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick,
 using tLightWater = Trial<Trial_LightWater, sCalmDown, sLight, sTag, sMonitorLick, sWater, sFixedITI>;
 using tAudioWater = Trial<Trial_AudioWater, sCalmDown, sAudio, sTag, sMonitorLick, sWater, sFixedITI>;
 using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sLight, sDelay, sAir, sRandomITI>;
+using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
 
 const auto& SessionMap = SessionMap_t<
   /*会话设计
@@ -189,6 +192,7 @@ const auto& SessionMap = SessionMap_t<
 	*/
   Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
-  Session<Session_LightWater, false, tLightWater, N<2>>,
+  Session<Session_LightWater, false, tLightWater, N<30>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,
-  Session<Session_LightAir, false, tLightAir, N<30>> >;
+  Session<Session_LightAir, false, tLightAir, N<30>>,
+  Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>> >;

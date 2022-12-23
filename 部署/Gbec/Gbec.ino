@@ -10,6 +10,8 @@ void setup() {
   Serial.begin(9600);
   // PC端无法确认何时初始化完毕，不能提前发送信号，必须等待Arduino端宣布初始化完毕
   SerialWrite(Signal_SerialReady);
+  pinMode(pCapacitorVdd,OUTPUT);
+  digitalWrite(pCapacitorVdd,HIGH);
 }
 const ISession *CurrentSession;
 void Start() {

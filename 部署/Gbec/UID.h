@@ -26,7 +26,7 @@ enum UID : uint8_t {
   API_Continue,
   API_Abort,
   API_Peek,
-  API_AcquireInfo,
+  API_GetInfo,
   API_Restore,
   API_TestStart,
   API_TestStop,
@@ -154,6 +154,9 @@ enum UID : uint8_t {
   Trial_LightWater,
   Trial_AudioWater,
   Trial_LightAir,
+  Trial_StartMonitor,
+  Trial_StopMonitor,
+  Trial_LightDelayWater,
 
   // 会话UID
 
@@ -163,4 +166,5 @@ enum UID : uint8_t {
   Session_LightWater,
   Session_AudioWater,
   Session_LightAir,
+  Session_SurveillanceThroughout,
 };

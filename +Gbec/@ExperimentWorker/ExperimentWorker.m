@@ -100,22 +100,26 @@ classdef ExperimentWorker<handle
 					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
 		end
+	end
+	methods
 		function RestoreSession(obj)
 			TrialsDone=obj.TrialRecorder.GetTimeTable().Event;
 			DistinctTrials=unique(TrialsDone);
 			NumTrials=countcats(categorical(TrialsDone));
 			obj.ApiCall(Gbec.UID.API_Restore);
-			obj.Serial.write(obj.Session,"uint8");
-			for T=1:numel(DistinctTrials)
+			obj.Serial.write(obj.SessionUID,"uint8");
+			NDT=numel(DistinctTrials);
+			obj.Serial.write(NDT,'uint8');
+			for T=1:NDT
 				obj.Serial.write(DistinctTrials(T),'uint8');
 				obj.Serial.write(NumTrials(T),'uint16');
 			end
-			if obj.WaitForSignal~=UID.Signal_SessionRestored
-				GbecException.Unexpected_response_from_Arduino.Throw;
+			if obj.WaitForSignal==Gbec.UID.Signal_SessionRestored
+				obj.Serial.configureCallback("byte",1,@obj.RunningCallback);
+			else
+				Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
 		end
-	end
-	methods
 		function obj=ExperimentWorker
 			%不可重复初始化WatchDog，否则清除EW变量时不会delete
             disp(['通用行为实验控制器v' Gbec.Version().Me ' by 张天夫']);
@@ -136,10 +140,10 @@ classdef ExperimentWorker<handle
 					Gbec.GbecException.Serial_handshake_failed.Throw;
 				end
 				obj.WatchDog.TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial);
+				obj.Serial.ErrorOccurredFcn=@obj.InterruptRetry;
 			end
 			obj.WatchDog.stop;
 			obj.Serial.configureCallback("off");
-			obj.Serial.ErrorOccurredFcn=@obj.InterruptRetry;
 		end
 		function StartTest(EW,TestUID,TestTimes)
 			arguments
@@ -254,7 +258,6 @@ classdef ExperimentWorker<handle
 				EW.RestoreSession;
 				EW.EventRecorder.LogEvent(UID.Signal_SessionContinue);
 				disp('会话继续');
-				EW.Serial.configureCallback('byte',1,@EW.RunningCallback);
 				EW.State=UID.State_SessionRunning;
 			else
 				EW.ApiCall(UID.API_Continue);
@@ -348,7 +351,9 @@ classdef ExperimentWorker<handle
 			Blocks=table;
 			Blocks.DateTime=EW.DateTime;
 			Blocks.Design=string(Design(9:end));
-			Blocks.EventLog={EW.EventRecorder.GetTimeTable};
+			EventLog=EW.EventRecorder.GetTimeTable;
+			EventLog.Event=Gbec.LogTranslate(EventLog.Event);
+			Blocks.EventLog={EventLog};
 			Blocks.BlockIndex=0x1;
 			Blocks.BlockUID=0x001;
 			Trials=table;
@@ -358,7 +363,7 @@ classdef ExperimentWorker<handle
 			Trials.TrialUID=TrialIndex;
 			Trials.BlockUID(:)=0x001;
 			Trials.TrialIndex=TrialIndex;
-			Trials.Stimulus=Stimulus.Event;
+			Trials.Stimulus=Gbec.LogTranslate(Stimulus.Event);
 			Trials.Time=Stimulus.Time;
 			Version=Gbec.Version;
 			save(EW.SavePath,'DateTimes','Blocks','Trials','Version');
