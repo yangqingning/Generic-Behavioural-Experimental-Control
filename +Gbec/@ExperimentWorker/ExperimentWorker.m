@@ -68,7 +68,7 @@ classdef ExperimentWorker<handle
 			end
 			if EW.SaveFile
 				if input("实验已放弃，是否保存现有数据？y/n","s")~="n"
-					EW.SaveInformation(EW.SessionUID);
+					EW.SaveInformation;
 				else
 					delete(EW.SavePath);
 				end
