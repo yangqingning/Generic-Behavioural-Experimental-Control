@@ -400,8 +400,12 @@ classdef ExperimentWorker<handle
 			Trials.TrialUID=TrialIndex;
 			Trials.BlockUID(:)=0x001;
 			Trials.TrialIndex=TrialIndex;
-			Trials.Stimulus=Gbec.LogTranslate(Stimulus.Event);
 			Trials.Time=Stimulus.Time;
+			Stimulus=Gbec.LogTranslate(Stimulus.Event);
+			Untranslated=startsWith(Stimulus,'Trial_');
+			SplitStimulus=split(Stimulus(Untranslated),'_');
+			Stimulus(Untranslated)=SplitStimulus(:,2);
+			Trials.Stimulus=Stimulus;
 			Version=Gbec.Version;
 			save(obj.SavePath,'DateTimes','Blocks','Trials','Version');
 			SaveDirectory=fileparts(obj.SavePath);
