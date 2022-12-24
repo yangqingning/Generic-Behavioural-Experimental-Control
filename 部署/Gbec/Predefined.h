@@ -46,8 +46,9 @@ void DetachInterrupt(void (*Callback)()) {
 }
 struct ITest {
   UID MyUID;
-  // 返回是否自动终止，无需Stop
+  // 测试开始时将调用此方法。测试分为自动结束型和手动结束型。对于自动结束型，应当根据TestTimes参数将测试重复指定的次数，并返回true表示该测试将自动结束。对于手动结束型，一般应当忽略TestTimes参数，返回false，持续测试直到Stop被调用。
   virtual bool Start(uint16_t TestTimes) const = 0;
+  //测试被用户手动结束时将调用此方法。自动结束型测试无需实现此方法，手动结束型则必须实现。
   virtual void Stop() const {}
   constexpr ITest(UID MyUID)
     : MyUID(MyUID) {}

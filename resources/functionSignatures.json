@@ -1,0 +1,89 @@
+{
+	"Gbec.ExperimentWorker.SerialInitialize": {
+		"inputs": [
+			{
+				"name": "obj"
+			},
+			{
+				"name": "SerialPort",
+				"kind": "required",
+				"type": [
+					[
+						"string",
+						"scalar"
+					],
+					[
+						"char",
+						"row"
+					]
+				],
+				"purpose": "串口名称"
+			}
+		]
+	},
+	"Gbec.ExperimentWorker.StartTest": {
+		"inputs":[
+			{
+				"name":"obj"
+			},
+			{
+				"name":"TestUID",
+				"kind":"required",
+				"type":["scalar","Gbec.UID"],
+				"purpose":"要开始的测试UID"
+			},
+			{
+				"name":"TestTimes",
+				"kind":"ordered",
+				"type":"positive",
+				"purpose":"测试次数",
+				"default":1
+			}
+		]
+	},
+	"Gbec.ExperimentWorker.StopTest":{
+		"inputs":[
+			{
+				"name":"obj"
+			},
+			{
+				"name":"TestUID",
+				"kind":"ordered",
+				"type":["scalar","Gbec.UID"],
+				"purpose":"要停止的测试UID"
+			}
+		]
+	},
+	"Gbec.ExpeirmentWorker.OneEnterOneCheck":{
+		"inputs":[
+			{
+				"name":"obj"
+			},
+			{
+				"name":"TestUID",
+				"kind":"required",
+				"type":["scalar","Gbec.UID"],
+				"purpose":"要运行的测试UID"
+			},
+			{
+				"name":"EnterPrompt",
+				"kind":"required",
+				"type":[["string","scalar"],["char","row"]],
+				"purpose":"提示文字"
+			}
+		]
+	},
+	"Gbec.ExperimentWorker.GetInformation":{
+		"inputs":[
+			{
+				"name":"obj"
+			},
+			{
+				"name":"SessionUID",
+				"kind":"ordered",
+				"type":["scalar","Gbec.UID"],
+				"purpose":"要获取的会话UID"
+			}
+		]
+	}
+}

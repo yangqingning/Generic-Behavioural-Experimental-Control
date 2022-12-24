@@ -22,6 +22,7 @@ classdef ExperimentWorker<handle
 		RetryInterval(1,1)double=2
 		%断线重连尝试次数
 		MaxRetryTimes(1,1)uint8=3
+		%视频对象 
 		VideoInput
 	end
 	properties(Access=private)
@@ -38,7 +39,7 @@ classdef ExperimentWorker<handle
 		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
 		SerialFreeTime(1,1)double
 	end
-	methods(Static)
+	methods(Static,Access=private)
 		function ReleaseSerial(Serial)
 			delete(Serial);
 			disp('串口已释放');
@@ -100,8 +101,6 @@ classdef ExperimentWorker<handle
 					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
 		end
-	end
-	methods
 		function RestoreSession(obj)
 			TrialsDone=obj.TrialRecorder.GetTimeTable().Event;
 			DistinctTrials=unique(TrialsDone);
@@ -120,14 +119,21 @@ classdef ExperimentWorker<handle
 				Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
 		end
+	end
+	methods
 		function obj=ExperimentWorker
-			%不可重复初始化WatchDog，否则清除EW变量时不会delete
+			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
             disp(['通用行为实验控制器v' Gbec.Version().Me ' by 张天夫']);
 			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial));
 		end
 		function SerialInitialize(obj,SerialPort)
 			%初始化串口
-			%输入参数：SerialPort(1,1)string，串口名称
+			%# 语法
+			% ```MATLAB
+			% obj.SerialInitialize(SerialPort);
+			% ```
+			%# 输入参数
+			% SerialPort(1,1)string，串口名称
 			try
 				assert(obj.Serial.Port==SerialPort);
 				obj.ApiCall(Gbec.UID.API_IsReady);
@@ -146,13 +152,24 @@ classdef ExperimentWorker<handle
 			obj.Serial.configureCallback("off");
 		end
 		function StartTest(EW,TestUID,TestTimes)
+			%开始运行测试
+			%测试分为自动结束和手动结束两种类型。自动结束类型可以指定测试次数，默认1次；手动结束类型则无所谓测试次数，需要使用StopTest才能停止。
+			%# 语法
+			% ```MATLAB
+			% obj.StartTest(TestUID);
+			% %开始具有指定UID的测试
+			%
+			% obj.StartTest(TestUID,TestTimes);
+			% %额外指定测试次数
+			% ```
+			%# 输入参数
+			% TestUID(1,1)Gbec.UID，要开始的测试UID
+			% TestTimes(1,1)=1，测试次数。如果是手动结束类测试，该参数将被忽略
 			arguments
 				EW
 				TestUID
 				TestTimes=1
 			end
-			%开始检查监视器
-			%输入参数：DeviceUID(1,1)Gbec.UID，设备标识符
 			import Gbec.UID
 			EW.WatchDog.stop;
 			EW.ApiCall(UID.API_TestStart);
@@ -173,11 +190,18 @@ classdef ExperimentWorker<handle
 			end
 		end
 		function StopTest(EW,TestUID)
+			%停止测试
+			%仅适用于手动结束类测试。自动结束类测试不能停止。
+			%# 语法
+			% ```MATLAB
+			% obj.StopTest(TestUID);
+			% ```
+			%# 输入参数
+			% TestUID(1,1)Gbec.UID=Gbec.UID.Test_Last，要停止的测试UID，只能选择手动结束类测试进行停止。默认停止上一个开始的测试。
 			arguments
 				EW
 				TestUID=Gbec.UID.Test_Last
 			end
-			%停止检查监视器
 			import Gbec.UID
 			EW.ApiCall(UID.API_TestStop);
 			EW.Serial.write(TestUID,'uint8');
@@ -196,9 +220,15 @@ classdef ExperimentWorker<handle
 			end
 		end
 		function OneEnterOneCheck(EW,TestUID,EnterPrompt)
-			%检查刺激器，按一次回车给一个刺激，输入任意字符停止检查
-			%输入参数：
-			%DeviceUID(1,1)Gbec.UID，设备标识符
+			%对于自动结束类测试，提供一个"按一次回车测试一次"的友好交互
+			%调用此方法后，会在命令行窗口显示提示，等待用户输入，用户按回车则运行一次测试，输入任意字符后按回车则停止测试。详见SelfCheck_Client.mlx中的示例用法。手动
+			% 结束类测试不支持此方法。
+			%# 语法
+			% ```MATLAB
+			% obj.OneEnterOneCheck(TestUID,EnterPrompt);
+			% ```
+			%# 输入参数
+			%TestUID(1,1)Gbec.UID，要运行的测试UID，必须是自动结束类测试
 			%EnterPrompt(1,1)string，提示文字，将显示在命令行中
 			import Gbec.UID
 			import Gbec.GbecException
@@ -315,12 +345,23 @@ classdef ExperimentWorker<handle
 			EW.WatchDog.StartDelay=SFT;
 		end
 		function Information = GetInformation(EW,SessionUID)
+			%获取会话信息
+			%# 语法
+			% ```MATLAB
+			% Info=obj.GetInformation;
+			% %获取上次运行的会话信息
+			%
+			% Info=obj.GetInformation(SessionUID);
+			% %获取指定UID的会话信息
+			% ```
+			%# 输入参数
+			% SessionUID(1,1)Gbec.UID=Gbec.UID.Session_Current，要获取的会话UID，默认获取之前运行的会话信息
+			%# 返回值
+			% Information(1,1)struct，信息结构体
 			arguments
 				EW
 				SessionUID=Gbec.UID.Session_Current
 			end
-			%获取会话信息
-			%返回值：Information(1,1)struct，信息结构体
 			import Gbec.UID
 			EW.WatchDog.stop;
 			EW.ApiCall(UID.API_GetInfo);
@@ -336,28 +377,24 @@ classdef ExperimentWorker<handle
 					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
 		end
-		function SaveInformation(EW,SessionUID)
-			arguments
-				EW
-				SessionUID=Gbec.UID.Session_Current
-			end
-			%获取并保存会话信息
+		function SaveInformation(obj)
+			%获取并保存上次运行的会话信息到SaveFile文件。
 			DateTimes=table;
-			EW.DateTime.Second=0;
-			DateTimes.DateTime=EW.DateTime;
-			DateTimes.Mouse=EW.Mouse;
-			DateTimes.Metadata={EW.GetInformation(SessionUID)};
-			Design=char(EW.SessionUID);
+			obj.DateTime.Second=0;
+			DateTimes.DateTime=obj.DateTime;
+			DateTimes.Mouse=obj.Mouse;
+			DateTimes.Metadata={obj.GetInformation(obj.SessionUID)};
+			Design=char(obj.SessionUID);
 			Blocks=table;
-			Blocks.DateTime=EW.DateTime;
+			Blocks.DateTime=obj.DateTime;
 			Blocks.Design=string(Design(9:end));
-			EventLog=EW.EventRecorder.GetTimeTable;
+			EventLog=obj.EventRecorder.GetTimeTable;
 			EventLog.Event=Gbec.LogTranslate(EventLog.Event);
 			Blocks.EventLog={EventLog};
 			Blocks.BlockIndex=0x1;
 			Blocks.BlockUID=0x001;
 			Trials=table;
-			Stimulus=EW.TrialRecorder.GetTimeTable;
+			Stimulus=obj.TrialRecorder.GetTimeTable;
 			NumTrials=height(Stimulus);
 			TrialIndex=(0x001:NumTrials)';
 			Trials.TrialUID=TrialIndex;
@@ -366,11 +403,12 @@ classdef ExperimentWorker<handle
 			Trials.Stimulus=Gbec.LogTranslate(Stimulus.Event);
 			Trials.Time=Stimulus.Time;
 			Version=Gbec.Version;
-			save(EW.SavePath,'DateTimes','Blocks','Trials','Version');
-			SaveDirectory=fileparts(EW.SavePath);
-			disp("数据已保存到"+"<a href=""matlab:winopen('"+EW.SavePath+"');"">"+EW.SavePath+"</a> <a href=""matlab:cd('"+SaveDirectory+"');"">切换当前文件夹</a> <a href=""matlab:winopen('"+SaveDirectory+"');"">打开数据文件夹</a>");
+			save(obj.SavePath,'DateTimes','Blocks','Trials','Version');
+			SaveDirectory=fileparts(obj.SavePath);
+			disp("数据已保存到"+"<a href=""matlab:winopen('"+obj.SavePath+"');"">"+obj.SavePath+"</a> <a href=""matlab:cd('"+SaveDirectory+"');"">切换当前文件夹</a> <a href=""matlab:winopen('"+SaveDirectory+"');"">打开数据文件夹</a>");
 		end
 		function PeekState(EW)
+			%观察会话当前的运行状态
 			EW.ApiCall(Gbec.UID.API_Peek);
 			disp(Gbec.UID(EW.WaitForSignal));
 		end

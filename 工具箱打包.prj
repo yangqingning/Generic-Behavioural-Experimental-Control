@@ -55,8 +55,9 @@ ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明
 % **/*.bak
 %
 .git*
-resources
-**/*.asv</param.exclude.filters>
+resources/project
+**/*.asv
+**/*.vscode</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />
@@ -71,7 +72,7 @@ resources
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="8.0.1" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱的 MATLAB 扩展 Extension(2)</requiredAddOn>
+        <requiredAddOn earliest="10.1.0.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(2)</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -116,9 +117,9 @@ resources
     </fileset.rootdir>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}\+Gbec</file>
-      <file>${PROJECT_ROOT}\.vscode</file>
       <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\README.md</file>
+      <file>${PROJECT_ROOT}\resources</file>
       <file>${PROJECT_ROOT}\工具箱图像.png</file>
       <file>${PROJECT_ROOT}\部署</file>
     </fileset.rootfiles>
