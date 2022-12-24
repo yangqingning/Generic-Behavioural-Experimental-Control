@@ -35,7 +35,7 @@ const auto& TestMap = TestMap_t<
 	此测试运行时，每次指定引脚从低电平变成高电平，将向串口发出Signal_MonitorHit信号。
 	参数：
 	MyUID，唯一标识此测试的UID
-	Pin，要监视的引脚
+	Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
 	*/
   PinFlashTest<Test_CD1, pCD1, 1, 200>,
   PinFlashTest<Test_BlueLed, pBlueLed, 3, 200>,
@@ -61,7 +61,7 @@ using S = SerialWriteStep<Signal>;
 using StepName=CalmdownStep<Pin,TimerCode,MinMilliseconds,MaxMilliseconds=MinMilliseconds,MyUID=Step_Calmdown>;
 
 参数：
-Pin，要监视的引脚
+Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
 TimerCode，要使用的计时器
 MinMilliseconds，最小随机毫秒数
 MaxMilliseconds，最大随机毫秒数
@@ -95,7 +95,7 @@ using sTag = PinFlashStep<pCD1, 4, 200, NullStep, NullStep, Step_Tag>;
 using StepName=MonitorStep<Pin,TimerCode,Milliseconds,Flags,HitReporter,MissReporter=NullStep,MyUID=Step_Monitor>;
 
 参数：
-Pin，要监视的引脚
+Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
 TimerCode，要使用的计时器
 Milliseconds，要监视的毫秒数
 
@@ -137,7 +137,7 @@ using StepName=StopMonitorStep<Pin,Reporter,MyUID=Step_StopMonitor>;
 开始和终止步骤的Pin和Reporter参数必须相同，配对出现。开始步骤后即开始在后台持续监视，后续其它步骤继续正常执行，直到配对的终止步骤后才结束监视。
 
 参数：
-Pin，要监视的引脚。
+Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
 Reporter，汇报命中的步骤。此步骤总是异步执行，不等待立刻结束，无论步骤类本身是否宣称其为异步。
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
