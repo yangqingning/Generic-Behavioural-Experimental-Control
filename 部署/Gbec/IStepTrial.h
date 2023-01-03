@@ -25,7 +25,7 @@ struct IStep {
 };
 struct ITrial : public IStep {
   UID MyUID;
-  virtual void WriteInfo()const=0;
+  virtual void WriteInfo() const = 0;
 
 protected:
   static uint8_t StepsDone;
