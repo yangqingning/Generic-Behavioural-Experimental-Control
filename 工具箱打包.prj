@@ -4,25 +4,24 @@
     <param.authnamewatermark>张天夫</param.authnamewatermark>
     <param.email>vhtmfu@outlook.com</param.email>
     <param.company>上海科技大学管吉松实验室</param.company>
-    <param.summary>通用行为实验控制，MATLAB与Arduino串口连接</param.summary>
-    <param.description>本实验控制系统分为Arduino服务端和MATLAB客户端两个部分。使用本系统的优越性：
+    <param.summary>通用行为实验控制，MATLAB与Arduino串口连接，提供高度可扩展可配置的模块化一站式服务</param.summary>
+    <param.description>实验室的自动化行为实验控制大多用Arduino开发板实现。Arduino开发板是一种嵌入式计算机，可以通过杜邦线引脚连接到硬件设备模组，实现对小鼠的感官刺激和行为记录。为了对实验过程编程，需要编写代码。Arduino官方提供IDE，可以将C++代码编译上传到开发板执行。此外，MATLAB也提供Arduino开发工具箱，允许使用MATLAB语言对Arduino开发板进行编程。基于这两套技术栈，我们实验室流传下来大量经典的行为实验控制代码。
+
+但是，这整个生态系统都存在根本性的严重问题：
+
+从 Arduino IDE 上传的C++代码只能在Arduino中执行，无法将收集到的行为数据传回主机进行处理和存储。主机端必须另外配置数据收集解决方案。
+MATLAB工具箱并不能将MATLAB代码编译成Arduino二进制代码，而是将预编译的服务器上传到Arduino，然后主机端MATLAB通过连接Arduino的USB串口一条一条发送指令，交给Arduino执行。这除了导致只能使用MATLAB提供的指令、无法进行多线程编程以外，指令通过串口的传输也存在延迟，对时间精度要求较高的刺激（例如光遗传激光波形、短暂的水泵给水）无法正确完成。
+祖传代码大多为了特定的实验临时编写，代码设计相对固定，可扩展、可配置性极差，缺乏良好的设计思路。
+为了解决这些问题，必须重新编写一个横跨Arduino与主机MATLAB两端的桥梁，并采用高度模块化的代码结构设计，并确保将时间精度要求高的过程由Arduino端独立决策完成。于是有此项目。
+
+本实验控制系统分为Arduino服务端和MATLAB客户端两个部分。使用本系统的优越性：
 
 连接PC端和Arduino只为传简单信号，Arduino端独立决策，比用MATLAB端步步操纵Arduino具有更高的时间精度；
 高度可自定义性，清晰的模块化组件化搭配，可重用性高；
 随时暂停、放弃实验，不需要拔插头；
-实验过程中意外掉线自动重连，不会丢失进度
-配置环境
-安装本工具箱之前需要先安装Arduino IDE。
-
-此外，本实验系统还依赖埃博拉酱的MATLAB扩展。正常情况下，此工具箱在安装本工具箱时会被自动安装。如果安装失败，可以在MATLAB附加功能管理器中安装。
-
-工具箱安装成功后，请务必查看快速入门指南（GettingStarted.mlx），执行进一步安装配置。
-
-本项目是行为实验通用控制程序，因此针对不同的实验设计，你需要自行编写一些自定义Arduino代码。最常用的就是ExperimentDesign.cpp，各种实验参数都需要在这里设置好然后上传到Arduino。对于较大的改动，如硬件、回合、实验方案等的增删，可能还需要修改UIDs.h。
-
-ExperimentDesign.cpp的具体配置语法，在文件中有详细的注释说明。但在那之前，建议先浏览一遍自述文件。</param.description>
+实验过程中意外掉线自动重连，不会丢失进度</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>5.0.0</param.version>
+    <param.version>5.0.1</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -133,15 +132,8 @@ resources/project
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2022b</root>
-      <toolboxes>
-        <toolbox name="matlabcoder" />
-      </toolboxes>
-      <toolbox>
-        <matlabcoder>
-          <enabled>true</enabled>
-        </matlabcoder>
-      </toolbox>
+      <root>C:\Program Files\MATLAB\R2023a</root>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>false</unix>
