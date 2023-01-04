@@ -42,7 +42,7 @@ const auto& TestMap = TestMap_t<
   PinFlashTest<Test_ActiveBuzzer, pActiveBuzzer, 4, 200>,
   PinFlashTest<Test_Water, pWaterPump, 5, 150>,
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
-  PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 0, 100>,
+  PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 0, 100, LOW>,
   MonitorTest<Test_CapacitorMonitor, pCapacitorOut> >;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
