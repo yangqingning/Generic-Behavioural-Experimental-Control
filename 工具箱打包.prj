@@ -56,7 +56,8 @@ MATLAB工具箱并不能将MATLAB代码编译成Arduino二进制代码，而是�
 .git*
 resources/project
 **/*.asv
-**/*.vscode</param.exclude.filters>
+**/*.vscode
+Debug.mlx</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />

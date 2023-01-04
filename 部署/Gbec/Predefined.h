@@ -194,14 +194,18 @@ class CalmdownStep : public IStep {
     else
       TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(FinishCallback);
   }
+  static void TimeUp() {
+    DetachInterrupt<Pin>(Reset);
+    FinishCallback();
+  }
 
 public:
   bool Start(void (*FC)()) const override {
     FinishCallback = FC;
     if (RandomTime)
-      TimersOneForAll::DoAfter<TimerCode>(Milliseconds = random(MinMilliseconds, MaxMilliseconds + 1), FinishCallback);
+      TimersOneForAll::DoAfter<TimerCode>(Milliseconds = random(MinMilliseconds, MaxMilliseconds + 1), TimeUp);
     else
-      TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(FinishCallback);
+      TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(TimeUp);
     RisingInterrupt<Pin>(Reset);
     return true;
   }
@@ -212,6 +216,10 @@ public:
   void Continue() const override {
     TimersOneForAll::Continue<TimerCode>();
     RisingInterrupt<Pin>(Reset);
+  }
+  void Abort()const override{
+    DetachInterrupt<Pin>(Reset);
+    TimersOneForAll::ShutDown<TimerCode>();
   }
   void Setup() const override {
     if (NeedSetup<Pin>) {
@@ -294,12 +302,16 @@ public:
     return true;
   }
   void Pause() const override {
-    TimersOneForAll::Pause<TimerCode>();
     DetachInterrupt<Pin>(HitReport);
+    TimersOneForAll::Pause<TimerCode>();
   }
   void Continue() const override {
-    RisingInterrupt<Pin>(HitReport);
     TimersOneForAll::Continue<TimerCode>();
+    RisingInterrupt<Pin>(HitReport);
+  }
+  void Abort()const override{
+    DetachInterrupt<Pin>(HitReport);
+    TimersOneForAll::ShutDown<TimerCode>();
   }
   void Setup() const override {
     if (NeedSetup<Pin>) {
@@ -337,6 +349,9 @@ struct WaitStep : public IStep {
   }
   void Continue() const override {
     TimersOneForAll::Continue<TimerCode>();
+  }
+  void Abort()const override{
+    TimersOneForAll::ShutDown<TimerCode>();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_MinMilliseconds, MinMilliseconds, Info_MaxMilliseconds, MaxMilliseconds);
 };

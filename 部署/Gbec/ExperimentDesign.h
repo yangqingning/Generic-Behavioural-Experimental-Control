@@ -5,11 +5,11 @@
 // 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
 
 Pin pCD1 = 9;
-Pin pBlueLed = 8;
-Pin pActiveBuzzer = 22;
-Pin pWaterPump = 2;
-Pin pAirPuff = 12;
-Pin pCapacitorVdd = 7;
+Pin pBlueLed = 3;
+Pin pActiveBuzzer = 6;
+Pin pWaterPump = 8;
+Pin pAirPuff = 7;
+Pin pCapacitorVdd = 22;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
 //使用一个模拟输入引脚获取随机种子，这个引脚应该是空闲状态
