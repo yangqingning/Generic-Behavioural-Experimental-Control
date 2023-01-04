@@ -403,7 +403,8 @@ classdef ExperimentWorker<handle
 			Trials.Time=Stimulus.Time;
 			Stimulus=Gbec.LogTranslate(Stimulus.Event);
 			Untranslated=startsWith(Stimulus,'Trial_');
-			SplitStimulus=split(Stimulus(Untranslated),'_');
+			%split必须指定拆分维度，否则标量和向量行为不一致
+			SplitStimulus=split(Stimulus(Untranslated),'_',2);
 			Stimulus(Untranslated)=SplitStimulus(:,2);
 			Trials.Stimulus=Stimulus;
 			Version=Gbec.Version;
