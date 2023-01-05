@@ -94,7 +94,7 @@ template<typename ToAdd, typename Container>
 struct _AddToArray;
 template<typename ToAdd, template<typename...> typename Container, typename... AlreadyIn>
 struct _AddToArray<ToAdd, Container<AlreadyIn...>> {
-  using Result = Container<ToAdd,AlreadyIn...>;
+  using Result = Container<ToAdd, AlreadyIn...>;
 };
 template<typename ToAdd, typename Container>
 using AddToArray = typename _AddToArray<ToAdd, Container>::Result;
@@ -217,7 +217,7 @@ public:
     TimersOneForAll::Continue<TimerCode>();
     RisingInterrupt<Pin>(Reset);
   }
-  void Abort()const override{
+  void Abort() const override {
     DetachInterrupt<Pin>(Reset);
     TimersOneForAll::ShutDown<TimerCode>();
   }
@@ -309,7 +309,7 @@ public:
     TimersOneForAll::Continue<TimerCode>();
     RisingInterrupt<Pin>(HitReport);
   }
-  void Abort()const override{
+  void Abort() const override {
     DetachInterrupt<Pin>(HitReport);
     TimersOneForAll::ShutDown<TimerCode>();
   }
@@ -350,7 +350,7 @@ struct WaitStep : public IStep {
   void Continue() const override {
     TimersOneForAll::Continue<TimerCode>();
   }
-  void Abort()const override{
+  void Abort() const override {
     TimersOneForAll::ShutDown<TimerCode>();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_MinMilliseconds, MinMilliseconds, Info_MaxMilliseconds, MaxMilliseconds);
@@ -490,7 +490,11 @@ struct Session : public ISession {
       std::fill_n(TQPointer, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
       TQPointer += TrialsLeft[T];
     }
-    NeedSetup = false;
+    if(NeedSetup)
+    {
+      std::ArduinoUrng::seed(analogRead(1));
+      NeedSetup = false;
+    }
     if (TRandom)
       std::shuffle(TrialQueue.data(), TQPointer, Urng);
     TrialsDone = 0;

@@ -5,7 +5,6 @@ std::vector<const ITrial *> ISession::TrialQueue;
 uint16_t ISession::TrialsDone;
 uint16_t ISession::TrialsRestored;
 void (*ISession::FinishCallback)();
-std::mt19937 ISession::Urng;
 
 void ISession::RunAsync() {
 #pragma pack(push, 1)

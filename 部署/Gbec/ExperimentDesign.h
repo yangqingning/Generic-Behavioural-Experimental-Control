@@ -124,8 +124,8 @@ MaxMilliseconds，最大等待的毫秒数。可以设置为与MinMilliseconds�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sFixedITI = WaitStep<2, 20000>;
-using sRandomITI = WaitStep<2, 10000, 20000>;
+using sFixedITI = WaitStep<2, 2000>;
+using sRandomITI = WaitStep<2, 1000, 2000>;
 using sFixedPrepare = WaitStep<2, 2000>;
 using sDelay = WaitStep<2, 1000>;
 

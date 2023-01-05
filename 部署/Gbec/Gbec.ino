@@ -5,13 +5,13 @@ void SessionFinish() {
   SerialWrite(State = State_SessionFinished);
 }
 void setup() {
-  ISession::Setup(SessionFinish, analogRead(pRandomPin));
   Serial.setTimeout(-1);
   Serial.begin(9600);
   // PC端无法确认何时初始化完毕，不能提前发送信号，必须等待Arduino端宣布初始化完毕
+  pinMode(pCapacitorVdd, OUTPUT);
+  digitalWrite(pCapacitorVdd, HIGH);
+  ISession::FinishCallback = SessionFinish;
   SerialWrite(Signal_SerialReady);
-  pinMode(pCapacitorVdd,OUTPUT);
-  digitalWrite(pCapacitorVdd,HIGH);
 }
 const ISession *CurrentSession;
 void Start() {
@@ -158,8 +158,12 @@ void loop() {
     IsReady,
   };
   const uint8_t API = SerialRead<uint8_t>();
+  Serial.write(Signal_Debug1);
+  Serial.write(API);
+  SerialWrite(std::extent_v<decltype(APIs)>);
   if (API < std::extent_v<decltype(APIs)>) {
     SerialWrite(Signal_ApiFound);
+    SerialWrite(APIs[API]);
     APIs[API]();
   } else
     SerialWrite(Signal_ApiInvalid);

@@ -1,4 +1,6 @@
 #pragma once
+//Arduino.h只会在ino文件自动包含，其它编译单元必须手动包含Arduino.h才有Serial
+#include<Arduino.h>
 template <typename Type>
 inline void SerialWrite(const Type &Value)
 {

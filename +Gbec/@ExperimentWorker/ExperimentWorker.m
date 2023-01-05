@@ -46,7 +46,7 @@ classdef ExperimentWorker<handle
 		end
 	end
 	methods(Access=private)
-		function MonitorCallback(EW,~,~)
+		function ManualTestCallback(EW,~,~)
 			persistent SignalIndex
 			if isempty(SignalIndex)
 				SignalIndex=0;
@@ -182,7 +182,7 @@ classdef ExperimentWorker<handle
 					disp('测试开始（自动结束）');
 				case UID.Signal_TestStartedManualStop
 					disp('测试开始（手动结束）');
-					EW.Serial.configureCallback('byte',1,@EW.MonitorCallback);
+					EW.Serial.configureCallback('byte',1,@EW.ManualTestCallback);
 				case UID.State_SessionRunning
 					Gbec.GbecException.Cannot_test_while_session_running.Throw;
 				otherwise
