@@ -46,20 +46,6 @@ classdef ExperimentWorker<handle
 		end
 	end
 	methods(Access=private)
-		function ManualTestCallback(EW,~,~)
-			persistent SignalIndex
-			if isempty(SignalIndex)
-				SignalIndex=0;
-			end
-			while EW.Serial.NumBytesAvailable
-				if EW.Serial.read(1,"uint8")==Gbec.UID.Signal_MonitorHit
-					SignalIndex=SignalIndex+1;
-					disp("成功检测到触摸信号："+num2str(SignalIndex));
-				else
-					warning("收到非法信号");
-				end
-			end
-		end
 		function AbortAndSave(EW)
 			EW.EventRecorder.LogEvent(Gbec.UID.State_SessionAborted);
 			disp('会话已放弃');
@@ -91,15 +77,17 @@ classdef ExperimentWorker<handle
 			end
 		end
 		function ApiCall(obj,ApiUid)
-			obj.Serial.flush;
 			obj.Serial.write(ApiUid,'uint8');
 			while true
 				%这里可能会有不断发送的中断信号干扰，这些信号无用但不构成错误，需要过滤掉
-				switch obj.WaitForSignal
+				Signal=obj.WaitForSignal;
+				switch Signal
 					case Gbec.UID.Signal_ApiFound
 						break
 					case Gbec.UID.Signal_ApiInvalid
 						Gbec.GbecException.Arduino_received_unsupported_API_code.Throw;
+					otherwise
+						obj.HandleSignal(Signal);
 				end
 			end
 		end
@@ -116,9 +104,14 @@ classdef ExperimentWorker<handle
 				obj.Serial.write(NumTrials(T),'uint16');
 			end
 			if obj.WaitForSignal==Gbec.UID.Signal_SessionRestored
-				obj.Serial.configureCallback("byte",1,@obj.RunningCallback);
+				obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
 			else
 				Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+			end
+		end
+		function SerialCallback(obj,~,~)
+			while obj.Serial.NumBytesAvailable
+				obj.HandleSignal(obj.Serial.read(1,'uint8'));
 			end
 		end
 	end
@@ -177,20 +170,25 @@ classdef ExperimentWorker<handle
 			EW.ApiCall(UID.API_TestStart);
 			EW.Serial.write(TestUID,'uint8');
 			EW.Serial.write(TestTimes,'uint16');
-			switch EW.WaitForSignal
-				case UID.Signal_NoSuchTest
-					Gbec.GbecException.Test_not_found_in_Arduino.Throw;
-				case UID.Signal_TestStartedAutoStop
-					disp('测试开始（自动结束）');
-				case UID.Signal_TestStartedManualStop
-					disp('测试开始（手动结束）');
-					EW.Serial.configureCallback('byte',1,@EW.ManualTestCallback);
-				case UID.State_SessionRunning
-					Gbec.GbecException.Cannot_test_while_session_running.Throw;
-				case UID.State_SessionPaused
-					Gbec.GbecException.Cannot_test_while_session_paused.Throw;
-				otherwise
-					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+			while true
+				Signal=EW.WaitForSignal;
+				switch Signal
+					case UID.Signal_NoSuchTest
+						Gbec.GbecException.Test_not_found_in_Arduino.Throw;
+					case UID.Signal_TestStartedAutoStop
+						disp('测试开始（自动结束）');
+						break;
+					case UID.Signal_TestStartedManualStop
+						disp('测试开始（手动结束）');
+						EW.Serial.configureCallback('byte',1,@EW.SerialCallback);
+						break;
+					case UID.State_SessionRunning
+						Gbec.GbecException.Cannot_test_while_session_running.Throw;
+					case UID.State_SessionPaused
+						Gbec.GbecException.Cannot_test_while_session_paused.Throw;
+					otherwise
+						obj.HandleSignal(Signal);
+				end
 			end
 		end
 		function StopTest(EW,TestUID)
@@ -211,18 +209,21 @@ classdef ExperimentWorker<handle
 			EW.Serial.write(TestUID,'uint8');
 			while true
 				%这里可能会有不断发送的中断信号干扰，这些信号无用但不构成错误，需要过滤掉
-				switch EW.WaitForSignal
+				Signal=EW.WaitForSignal;
+				switch Signal
 					case UID.Signal_TestStopped
 						disp('测试结束');
 						EW.Serial.configureCallback('off');
-						break
+						break;
 					case UID.State_SessionRunning
 						disp('测试结束');
-						break
+						break;
 					case UID.Signal_NoLastTest
 						Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
 					case UID.Signal_NoSuchTest
 						Gbec.GbecException.Test_not_found_on_Arduino.Throw;
+					otherwise
+						obj.HandleSignal(Signal);
 				end
 			end
 		end
@@ -244,22 +245,26 @@ classdef ExperimentWorker<handle
 				EW.ApiCall(UID.API_TestStart);
 				EW.Serial.write(TestUID,'uint8');
 				EW.Serial.write(1,'uint16');
-				switch EW.WaitForSignal
-					case UID.Signal_NoSuchTest
-						GbecException.Test_not_found_in_Arduino.Throw;
-					case UID.Signal_TestStartedAutoStop
-					case UID.Signal_TestStartedManualStop
-						EW.ApiCall(UID.API_TestStop);
-						EW.Serial.write(TestUID,'uint8');
-						if EW.WaitForSignal~=UID.Signal_TestStopped
-							GbecException.Unexpected_response_from_Arduino.Throw;
-						else
-							GbecException.Cannot_OneEnterOneCheck_on_manual_stopped_test.Throw;
-						end
-					case UID.State_SessionRunning
-						GbecException.Cannot_test_while_session_running.Throw;
-					otherwise
-						GbecException.Unexpected_response_from_Arduino.Throw;
+				while true
+					Signal=EW.WaitForSignal;
+					switch Signal
+						case UID.Signal_NoSuchTest
+							GbecException.Test_not_found_in_Arduino.Throw;
+						case UID.Signal_TestStartedAutoStop
+							break;
+						case UID.Signal_TestStartedManualStop
+							EW.ApiCall(UID.API_TestStop);
+							EW.Serial.write(TestUID,'uint8');
+							if EW.WaitForSignal==UID.Signal_TestStopped
+								GbecException.Cannot_OneEnterOneCheck_on_manual_stopped_test.Throw;
+							else
+								GbecException.Unexpected_response_from_Arduino.Throw;
+							end
+						case UID.State_SessionRunning
+							GbecException.Cannot_test_while_session_running.Throw;
+						otherwise
+							obj.HandleSignal(Signal);
+					end
 				end
 			end
 		end
@@ -271,20 +276,24 @@ classdef ExperimentWorker<handle
 				GbecException.Cannot_pause_a_paused_session.Throw;
 			end
 			EW.ApiCall(UID.API_Pause);
-			switch EW.WaitForSignal
-				case UID.State_SessionInvalid
-					GbecException.No_sessions_are_running.Throw;
-				case UID.State_SessionPaused
-					EW.EventRecorder.LogEvent(UID.State_SessionPaused);
-					disp('会话暂停');
-					EW.Serial.configureCallback('off');
-					EW.State=UID.State_SessionPaused;
-				case UID.State_SessionAborted
-					GbecException.Cannot_pause_an_aborted_session.Throw;
-				case UID.State_SessionFinished
-					GbecException.Cannot_pause_a_finished_session.Throw;
-				otherwise
-					GbecException.Unexpected_response_from_Arduino.Throw;
+			while true
+				Signal=EW.WaitForSignal;
+				switch Signal
+					case UID.State_SessionInvalid
+						GbecException.No_sessions_are_running.Throw;
+					case UID.State_SessionPaused
+						EW.EventRecorder.LogEvent(UID.State_SessionPaused);
+						disp('会话暂停');
+						EW.Serial.configureCallback('off');
+						EW.State=UID.State_SessionPaused;
+						break;
+					case UID.State_SessionAborted
+						GbecException.Cannot_pause_an_aborted_session.Throw;
+					case UID.State_SessionFinished
+						GbecException.Cannot_pause_a_finished_session.Throw;
+					otherwise
+						obj.HandleSignal(Signal);
+				end
 			end
 		end
 		function ContinueSession(EW)
@@ -298,22 +307,26 @@ classdef ExperimentWorker<handle
 				EW.State=UID.State_SessionRunning;
 			else
 				EW.ApiCall(UID.API_Continue);
-				switch EW.WaitForSignal
-					case UID.State_SessionInvalid
-						GbecException.No_sessions_are_running.Throw;
-					case UID.Signal_SessionContinue
-						EW.EventRecorder.LogEvent(UID.Signal_SessionContinue);
-						disp('会话继续');
-						EW.Serial.configureCallback('byte',1,@EW.RunningCallback);
-						EW.State=UID.State_SessionRunning;
-					case UID.State_SessionAborted
-						GbecException.Cannot_continue_an_aborted_session.Throw;
-					case UID.State_SessionFinished
-						GbecException.Cannot_continue_a_finished_session.Throw;
-					case UID.State_SessionRunning
-						GbecException.Cannot_continue_a_running_session.Throw;
-					otherwise
-						GbecException.Unexpected_response_from_Arduino.Throw;
+				while true
+					Signal=EW.WaitForSignal;
+					switch Signal
+						case UID.State_SessionInvalid
+							GbecException.No_sessions_are_running.Throw;
+						case UID.Signal_SessionContinue
+							EW.EventRecorder.LogEvent(UID.Signal_SessionContinue);
+							disp('会话继续');
+							EW.Serial.configureCallback('byte',1,@EW.SerialCallback);
+							EW.State=UID.State_SessionRunning;
+							break;
+						case UID.State_SessionAborted
+							GbecException.Cannot_continue_an_aborted_session.Throw;
+						case UID.State_SessionFinished
+							GbecException.Cannot_continue_a_finished_session.Throw;
+						case UID.State_SessionRunning
+							GbecException.Cannot_continue_a_running_session.Throw;
+						otherwise
+							obj.HandleSignal(Signal);
+					end
 				end
 			end
 		end
@@ -328,16 +341,20 @@ classdef ExperimentWorker<handle
 					GbecException.Cannot_abort_an_aborted_session.Throw;
 				otherwise
 					obj.ApiCall(UID.API_Abort);
-					switch obj.WaitForSignal
-						case UID.State_SessionInvalid
-							GbecException.No_sessions_are_running.Throw;
-						case UID.State_SessionAborted
-							obj.Serial.configureCallback('off');
-							obj.AbortAndSave;%这个函数调用包含了启用看门狗
-						case UID.State_SessionFinished
-							GbecException.Cannot_abort_a_finished_session.Throw;
-						otherwise
-							GbecException.Unexpected_response_from_Arduino.Throw;
+					while true
+						Signal=obj.WaitForSignal;
+						switch Signal
+							case UID.State_SessionInvalid
+								GbecException.No_sessions_are_running.Throw;
+							case UID.State_SessionAborted
+								obj.Serial.configureCallback('off');
+								obj.AbortAndSave;%这个函数调用包含了启用看门狗
+								break;
+							case UID.State_SessionFinished
+								GbecException.Cannot_abort_a_finished_session.Throw;
+							otherwise
+								obj.HandleSignal(Signal);
+						end
 					end
 			end
 		end
@@ -373,15 +390,19 @@ classdef ExperimentWorker<handle
 			EW.WatchDog.stop;
 			EW.ApiCall(UID.API_GetInfo);
 			EW.Serial.write(SessionUID,'uint8');
-			switch EW.WaitForSignal
-				case UID.State_SessionInvalid
-					Gbec.GbecException.Must_run_session_before_getting_information.Throw;
-				case UID.Signal_InfoStart
-					Information=CollectStruct(EW.Serial);
-				case UID.State_SessionRunning
-					Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
-				otherwise
-					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+			while true
+				Signal=EW.WaitForSignal;
+				switch Signal
+					case UID.State_SessionInvalid
+						Gbec.GbecException.Must_run_session_before_getting_information.Throw;
+					case UID.Signal_InfoStart
+						Information=CollectStruct(EW.Serial);
+						break;
+					case UID.State_SessionRunning
+						Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
+					otherwise
+						obj.HandleSignal(Signal);
+				end
 			end
 		end
 		function SaveInformation(obj)

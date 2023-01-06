@@ -30,22 +30,25 @@ if ~isempty(obj.VideoInput)
 	waitfor(obj.VideoInput,'Running','on');
 end
 obj.Serial.write(obj.SessionUID,"uint8");
-switch obj.WaitForSignal
-	case UID.State_SessionRunning
-		obj.Serial.configureCallback('byte',1,@obj.RunningCallback);
-		GbecException.There_is_already_a_session_running.Throw;
-	case UID.State_SessionPaused
-		GbecException.There_is_already_a_session_being_paused.Throw;
-	case UID.Signal_NoSuchSession
-		GbecException.Session_not_found_on_Arduino.Throw;
-	case UID.Signal_SessionStarted
-		obj.WatchDog.stop;
-		obj.EventRecorder.Reset;
-		obj.TrialRecorder.Reset;
-		obj.Serial.configureCallback("byte",1,@obj.RunningCallback);
-		obj.State=UID.State_SessionRunning;
-		disp('会话开始');
-	otherwise
-		GbecException.Unexpected_response_from_Arduino.Throw;
+while true
+	Signal=obj.WaitForSignal;
+	switch Signal
+		case UID.State_SessionRunning
+			GbecException.There_is_already_a_session_running.Throw;
+		case UID.State_SessionPaused
+			GbecException.There_is_already_a_session_being_paused.Throw;
+		case UID.Signal_NoSuchSession
+			GbecException.Session_not_found_on_Arduino.Throw;
+		case UID.Signal_SessionStarted
+			obj.WatchDog.stop;
+			obj.EventRecorder.Reset;
+			obj.TrialRecorder.Reset;
+			obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
+			obj.State=UID.State_SessionRunning;
+			disp('会话开始');
+			break;
+		otherwise
+			obj.HandleSignal(Signal);
+	end
 end
 end
