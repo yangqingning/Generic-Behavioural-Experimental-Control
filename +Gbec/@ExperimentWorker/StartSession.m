@@ -43,6 +43,7 @@ while true
 			obj.WatchDog.stop;
 			obj.EventRecorder.Reset;
 			obj.TrialRecorder.Reset;
+			obj.SignalHandler=@obj.RunningHandler;
 			obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
 			obj.State=UID.State_SessionRunning;
 			disp('会话开始');

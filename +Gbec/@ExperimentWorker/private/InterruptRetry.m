@@ -21,8 +21,7 @@ for a=1:obj.MaxRetryTimes
 	end
 end
 if ReconnectFail
-	%这里如果报错，会显示大量堆栈信息，所以不报错了
-	fprintf('\n重新连接失败');
+	GbecException.Disconnection_reconnection_failed.Throw;
 end
 disp("重新连接成功");
 if RunningOrPaused

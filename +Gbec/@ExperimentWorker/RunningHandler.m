@@ -1,9 +1,5 @@
-function HandleSignal(obj,Signal)
+function RunningHandler(obj,Signal)
 import Gbec.UID
-persistent SignalIndex
-if isempty(SignalIndex)
-	SignalIndex=0;
-end
 switch Signal
 	case UID.Signal_TrialStart
 		TrialIndex=obj.Serial.read(1,'uint16')+1;
@@ -45,9 +41,6 @@ switch Signal
 				trigger(obj.VideoInput);
 			end
 		end
-	case UID.Signal_MonitorHit
-		SignalIndex=SignalIndex+1;
-		disp("成功检测到触摸信号："+num2str(SignalIndex));
 	otherwise
 		%为了与TrialUID保持一致，这里也记录UID而不是字符串
 		obj.EventRecorder.LogEvent(UID(Signal));
