@@ -7,6 +7,7 @@ classdef GbecException<MATLAB.IEnumerableException
 		Session_not_found_on_Arduino
 		No_sessions_are_running
 		Cannot_test_while_session_running
+		Cannot_test_while_session_paused
 		Cannot_pause_a_paused_session
 		Cannot_pause_an_aborted_session
 		Cannot_pause_a_finished_session

@@ -73,11 +73,6 @@ template<UID TMyUID, uint8_t ReadPin, uint8_t ResetPin, uint8_t TimerCode>
 class MonitorTest : public ITest {
   static void ReportHit() {
     SerialWrite(Signal_MonitorHit);
-    if (Serial.available()) {
-      DigitalWrite<ResetPin, LOW>();
-      TimersOneForAll::DoAfter<TimerCode, 1000>(DigitalWrite<ResetPin, HIGH>);
-      EIFR = bit(digitalPinToInterrupt(ReadPin));
-    }
   }
 
 public:

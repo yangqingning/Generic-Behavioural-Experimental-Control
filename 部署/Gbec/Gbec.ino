@@ -9,7 +9,7 @@ void setup() {
   Serial.begin(9600);
   // PC端无法确认何时初始化完毕，不能提前发送信号，必须等待Arduino端宣布初始化完毕
   pinMode(pCapacitorVdd, OUTPUT);
-  DigitalWrite<pCapacitorOut,HIGH>();
+  DigitalWrite<pCapacitorOut, HIGH>();
   ISession::FinishCallback = SessionFinish;
   SerialWrite(Signal_SerialReady);
 }
@@ -103,8 +103,8 @@ void TestStart() {
   };
 #pragma pack(pop)
   const TestInfo TI = SerialRead<TestInfo>();
-  if (State == State_SessionRunning) {
-    SerialWrite(State_SessionRunning);
+  if (State == State_SessionRunning || State == State_SessionPaused) {
+    SerialWrite(State);
     return;
   }
   const auto Query = TestMap.find(TI.TestUID);
@@ -144,11 +144,6 @@ void TestStop() {
 void IsReady() {
   SerialWrite(Signal_SerialReady);
 }
-//从串口获取随机种子，因为Arduino设备没有可靠的获取真随机数的方法，测试发现读空模拟引脚也常常读到恒定值
-void RandomSeed()
-{
-  std::ArduinoUrng::seed(SerialRead<uint32_t>());
-}
 void loop() {
   constexpr void (*APIs[])() = {
     Start,
@@ -161,7 +156,6 @@ void loop() {
     TestStart,
     TestStop,
     IsReady,
-    RandomSeed,
   };
   const uint8_t API = SerialRead<uint8_t>();
   if (API < std::extent_v<decltype(APIs)>) {

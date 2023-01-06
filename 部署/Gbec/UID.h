@@ -26,7 +26,6 @@ enum UID : uint8_t {
   API_TestStart,
   API_TestStop,
   API_IsReady,
-  API_RandomSeed,
 
   //特殊事件
 

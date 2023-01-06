@@ -93,12 +93,14 @@ classdef ExperimentWorker<handle
 		function ApiCall(obj,ApiUid)
 			obj.Serial.flush;
 			obj.Serial.write(ApiUid,'uint8');
-			switch obj.WaitForSignal
-				case Gbec.UID.Signal_ApiFound
-				case Gbec.UID.Signal_ApiInvalid
-					Gbec.GbecException.Arduino_received_unsupported_API_code.Throw;
-				otherwise
-					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+			while true
+				%这里可能会有不断发送的中断信号干扰，这些信号无用但不构成错误，需要过滤掉
+				switch obj.WaitForSignal
+					case Gbec.UID.Signal_ApiFound
+						break
+					case Gbec.UID.Signal_ApiInvalid
+						Gbec.GbecException.Arduino_received_unsupported_API_code.Throw;
+				end
 			end
 		end
 		function RestoreSession(obj)
@@ -185,6 +187,8 @@ classdef ExperimentWorker<handle
 					EW.Serial.configureCallback('byte',1,@EW.ManualTestCallback);
 				case UID.State_SessionRunning
 					Gbec.GbecException.Cannot_test_while_session_running.Throw;
+				case UID.State_SessionPaused
+					Gbec.GbecException.Cannot_test_while_session_paused.Throw;
 				otherwise
 					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
 			end
@@ -205,18 +209,21 @@ classdef ExperimentWorker<handle
 			import Gbec.UID
 			EW.ApiCall(UID.API_TestStop);
 			EW.Serial.write(TestUID,'uint8');
-			switch EW.WaitForSignal
-				case UID.Signal_TestStopped
-					disp('测试结束');
-					EW.Serial.configureCallback('off');
-				case UID.State_SessionRunning
-					disp('测试结束');
-				case UID.Signal_NoLastTest
-					Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
-				case UID.Signal_NoSuchTest
-					Gbec.GbecException.Test_not_found_on_Arduino.Throw;
-				otherwise
-					Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+			while true
+				%这里可能会有不断发送的中断信号干扰，这些信号无用但不构成错误，需要过滤掉
+				switch EW.WaitForSignal
+					case UID.Signal_TestStopped
+						disp('测试结束');
+						EW.Serial.configureCallback('off');
+						break
+					case UID.State_SessionRunning
+						disp('测试结束');
+						break
+					case UID.Signal_NoLastTest
+						Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
+					case UID.Signal_NoSuchTest
+						Gbec.GbecException.Test_not_found_on_Arduino.Throw;
+				end
 			end
 		end
 		function OneEnterOneCheck(EW,TestUID,EnterPrompt)
