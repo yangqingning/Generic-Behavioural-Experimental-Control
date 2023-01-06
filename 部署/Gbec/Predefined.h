@@ -69,21 +69,26 @@ struct PinFlashTest : public ITest {
   }
 };
 // 监视引脚，每次高电平发送串口报告。此测试需要调用Stop才能终止，且无视TestTimes参数
-template<UID TMyUID, uint8_t Pin>
+template<UID TMyUID, uint8_t ReadPin, uint8_t ResetPin, uint8_t TimerCode>
 class MonitorTest : public ITest {
   static void ReportHit() {
     SerialWrite(Signal_MonitorHit);
+    if (Serial.available()) {
+      DigitalWrite<ResetPin, LOW>();
+      TimersOneForAll::DoAfter<TimerCode, 1000>(DigitalWrite<ResetPin, HIGH>);
+      EIFR = bit(digitalPinToInterrupt(ReadPin));
+    }
   }
 
 public:
   constexpr MonitorTest()
     : ITest(TMyUID) {}
   bool Start(uint16_t) const override {
-    RisingInterrupt<Pin>(ReportHit);
+    RisingInterrupt<ReadPin>(ReportHit);
     return false;
   }
   void Stop() const override {
-    DetachInterrupt<Pin>(ReportHit);
+    DetachInterrupt<ReadPin>(ReportHit);
   }
 };
 template<typename T>
@@ -419,9 +424,7 @@ class Trial : public ITrial {
   }
 
 public:
-  void WriteInfo() const override {
-    SerialWrite(InfoStruct(Info_UID, TUID, Info_Steps, InfoCell(TSteps::Info...)));
-  }
+  static constexpr auto Info = InfoStruct(Info_UID, TUID, Info_Steps, InfoCell(TSteps::Info...));
   constexpr Trial()
     : ITrial(TUID) {}
   void Setup() const override {
@@ -460,6 +463,7 @@ using N = std::integral_constant<uint16_t, Value>;
 template<typename... Trials>
 struct TrialArray {
   static const ITrial *Interfaces[sizeof...(Trials)];
+  static constexpr auto Info = InfoCell(Trials::Info...);
 };
 // 静态成员必须类外定义，即使模板也一样
 template<typename... Trials>
@@ -490,11 +494,7 @@ struct Session : public ISession {
       std::fill_n(TQPointer, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
       TQPointer += TrialsLeft[T];
     }
-    if(NeedSetup)
-    {
-      std::ArduinoUrng::seed(analogRead(1));
-      NeedSetup = false;
-    }
+    NeedSetup = false;
     if (TRandom)
       std::shuffle(TrialQueue.data(), TQPointer, Urng);
     TrialsDone = 0;
@@ -505,17 +505,8 @@ public:
   constexpr Session()
     : ISession(TUID) {}
   void WriteInfo() const override {
-    //这里内存不足了，只好拆开
-    SerialWrite<uint8_t>(4);
-    SerialWrite(InfoFields(Info_UID, TUID, Info_Random, TRandom));
-    SerialWrite(Info_DistinctTrials);
-    SerialWrite(Type_Cell);
-    SerialWrite(NumDistinctTrials);
-    for (const ITrial *T : TNS::Trials_t::Interfaces) {
-      SerialWrite(Type_Struct);
-      T->WriteInfo();
-    }
-    SerialWrite(InfoFields(Info_NumTrials, TNS::Numbers));
+    constexpr auto Info = InfoStruct(Info_UID, TUID, Info_Random, TRandom, Info_DistinctTrials, TNS::Trials_t::Info, Info_NumTrials, TNS::Numbers);
+    SerialWrite(Info);
   }
   void Start() const override {
     ArrangeAndRun(TNS::Numbers.Array);

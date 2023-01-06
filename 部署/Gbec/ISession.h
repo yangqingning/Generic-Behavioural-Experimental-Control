@@ -29,7 +29,7 @@ protected:
   static uint16_t TrialsDone;
   static uint16_t TrialsRestored;
   static void RunAsync();
-  static constexpr std::ArduinoUrng Urng=std::ArduinoUrng();
+  static constexpr std::ArduinoUrng Urng = std::ArduinoUrng();
   constexpr ISession(UID MyUID)
     : MyUID(MyUID) {}
 };

@@ -37,13 +37,13 @@ const auto& TestMap = TestMap_t<
 	MyUID，唯一标识此测试的UID
 	Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
 	*/
-  PinFlashTest<Test_CD1, pCD1, 1, 200>,
+  PinFlashTest<Test_CD1, pCD1, 0, 200>,
   PinFlashTest<Test_BlueLed, pBlueLed, 3, 200>,
   PinFlashTest<Test_ActiveBuzzer, pActiveBuzzer, 4, 200>,
   PinFlashTest<Test_Water, pWaterPump, 5, 150>,
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
-  PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 0, 100, LOW>,
-  MonitorTest<Test_CapacitorMonitor, pCapacitorOut> >;
+  PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
+  MonitorTest<Test_CapacitorMonitor, pCapacitorOut, pCapacitorVdd, 1>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
@@ -68,7 +68,7 @@ MaxMilliseconds，最大随机毫秒数
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sCalmDown = CalmdownStep<pCapacitorOut, 1, 5000, 10000>;
+using sCalmDown = CalmdownStep<pCapacitorOut, 1, 500, 1000>;
 
 /*引脚闪烁类步骤
 
