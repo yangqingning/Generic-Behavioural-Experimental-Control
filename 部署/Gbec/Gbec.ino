@@ -8,8 +8,7 @@ void setup() {
   Serial.setTimeout(-1);
   Serial.begin(9600);
   // PC端无法确认何时初始化完毕，不能提前发送信号，必须等待Arduino端宣布初始化完毕
-  pinMode(pCapacitorVdd, OUTPUT);
-  DigitalWrite<pCapacitorOut, HIGH>();
+  PinSetup();
   ISession::FinishCallback = SessionFinish;
   SerialWrite(Signal_SerialReady);
 }

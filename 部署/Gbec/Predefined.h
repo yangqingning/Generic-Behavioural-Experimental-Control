@@ -69,7 +69,7 @@ struct PinFlashTest : public ITest {
   }
 };
 // 监视引脚，每次高电平发送串口报告。此测试需要调用Stop才能终止，且无视TestTimes参数
-template<UID TMyUID, uint8_t ReadPin, uint8_t ResetPin, uint8_t TimerCode>
+template<UID TMyUID, uint8_t ReadPin>
 class MonitorTest : public ITest {
   static void ReportHit() {
     SerialWrite(Signal_MonitorHit);

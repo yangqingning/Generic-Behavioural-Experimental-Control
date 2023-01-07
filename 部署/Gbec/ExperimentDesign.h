@@ -12,8 +12,12 @@ Pin pAirPuff = 7;
 Pin pCapacitorVdd = 22;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
-//使用一个模拟输入引脚获取随机种子，这个引脚应该是空闲状态
-Pin pRandomPin = 1;
+
+// 设备特定初始化，例如电容的启动
+void PinSetup() {
+  pinMode(pCapacitorVdd, OUTPUT);
+  DigitalWrite<pCapacitorVdd, HIGH>();
+}
 
 // 关于计时器参数TimerCode。Arduino Mega 有0~5共6个计时器，其中1、3、4、5精度最高，2其次，0最低。应尽可能使用高精度计时器。必须使用低精度计时器的情况下，尽量给单次工作时间较长的设备分配高精度计时器。对于不可能同时工作的硬件，可以共享计时器；对于有可能需要同时工作的硬件，必须使用不同的计时器，否则会发生冲突。
 
@@ -43,7 +47,7 @@ const auto& TestMap = TestMap_t<
   PinFlashTest<Test_Water, pWaterPump, 5, 150>,
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
   PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
-  MonitorTest<Test_CapacitorMonitor, pCapacitorOut, pCapacitorVdd, 1>>;
+  MonitorTest<Test_CapacitorMonitor, pCapacitorOut>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
