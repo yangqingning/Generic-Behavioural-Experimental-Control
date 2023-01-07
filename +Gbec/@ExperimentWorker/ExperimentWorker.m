@@ -290,6 +290,8 @@ classdef ExperimentWorker<handle
 							end
 						case UID.State_SessionRunning
 							GbecException.Cannot_test_while_session_running.Throw;
+						case UID.State_SessionPaused
+							Gbec.GbecException.Cannot_test_while_session_paused.Throw;
 						otherwise
 							obj.HandleSignal(Signal);
 					end
