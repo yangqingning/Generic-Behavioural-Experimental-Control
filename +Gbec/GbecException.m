@@ -20,7 +20,7 @@ classdef GbecException<MATLAB.IEnumerableException
 		There_is_already_a_session_running
 		There_is_already_a_session_being_paused
 		Disconnection_reconnection_failed
-		Cannot_OneEnterOneCheck_on_manual_stopped_test
+		Cannot_OneEnterOneCheck_on_manually_stopped_test
 		Arduino_received_unsupported_API_code
 		Cannot_get_information_while_session_running
 		Cannot_record_without_VideoInput

@@ -286,7 +286,7 @@ classdef ExperimentWorker<handle
 							obj.ApiCall(UID.API_TestStop);
 							obj.Serial.write(TestUID,'uint8');
 							if obj.WaitForSignal==UID.Signal_TestStopped
-								GbecException.Cannot_OneEnterOneCheck_on_manual_stopped_test.Throw;
+								GbecException.Cannot_OneEnterOneCheck_on_manually_stopped_test.Throw;
 							else
 								GbecException.Unexpected_response_from_Arduino.Throw;
 							end
