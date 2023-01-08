@@ -11,6 +11,7 @@ void setup() {
   PinSetup();
   ISession::FinishCallback = SessionFinish;
   SerialWrite(Signal_SerialReady);
+  std::ArduinoUrng::seed(SerialRead<uint32_t>());
 }
 const ISession *CurrentSession;
 void Start() {

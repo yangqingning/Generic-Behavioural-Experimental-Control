@@ -162,7 +162,9 @@ classdef ExperimentWorker<handle
 				delete(obj.Serial);
 				obj.Serial=serialport(SerialPort,9600);
 				%刚刚初始化时不能向串口发送数据，只能等待Arduino主动宣布初始化完毕
-				if obj.WaitForSignal~=Gbec.UID.Signal_SerialReady
+				if obj.WaitForSignal==Gbec.UID.Signal_SerialReady
+					obj.Serial.write(randi(intmax('uint32'),'uint32'),'uint32');
+				else
 					Gbec.GbecException.Serial_handshake_failed.Throw;
 				end
 				obj.WatchDog.TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial);

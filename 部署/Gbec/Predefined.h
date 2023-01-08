@@ -190,9 +190,9 @@ class CalmdownStep : public IStep {
   static constexpr bool RandomTime = MinMilliseconds < MaxMilliseconds;
   static void Reset() {
     if (RandomTime)
-      TimersOneForAll::DoAfter<TimerCode>(Milliseconds, FinishCallback);
+      TimersOneForAll::DoAfter<TimerCode>(Milliseconds, TimeUp);
     else
-      TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(FinishCallback);
+      TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(TimeUp);
   }
   static void TimeUp() {
     DetachInterrupt<Pin>(Reset);
@@ -411,9 +411,7 @@ class Trial : public ITrial {
   static const IStep *Steps[sizeof...(TSteps)];
   static void NextStep() {
     while (StepsDone < sizeof...(TSteps))
-      if (Steps[StepsDone++]->Start([]() {
-            NextStep();
-          }))
+      if (Steps[StepsDone++]->Start(NextStep))
         return;
     FinishCallback();
   }
@@ -433,9 +431,7 @@ public:
     FinishCallback = FC;
     StepsDone = 0;
     while (StepsDone < sizeof...(TSteps))
-      if (Steps[StepsDone++]->Start([]() {
-            NextStep();
-          }))
+      if (Steps[StepsDone++]->Start(NextStep))
         return true;
     return false;
   }
