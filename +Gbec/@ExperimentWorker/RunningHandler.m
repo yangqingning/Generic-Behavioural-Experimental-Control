@@ -1,7 +1,7 @@
 function RunningHandler(obj,Signal)
 import Gbec.UID
 persistent Request HttpOptions
-if isemtpy(Request)
+if isempty(Request)
 	Request=matlab.net.http.RequestMessage;
 	HttpOptions=matlab.net.http.HTTPOptions;
 end
