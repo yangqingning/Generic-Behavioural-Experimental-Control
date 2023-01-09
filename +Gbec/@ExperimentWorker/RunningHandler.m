@@ -1,5 +1,10 @@
 function RunningHandler(obj,Signal)
 import Gbec.UID
+persistent Request HttpOptions
+if isemtpy(Request)
+	Request=matlab.net.http.RequestMessage;
+	HttpOptions=matlab.net.http.HTTPOptions;
+end
 switch Signal
 	case UID.Signal_TrialStart
 		TrialIndex=obj.Serial.read(1,'uint16')+1;
@@ -12,8 +17,13 @@ switch Signal
 			for a=0:obj.HttpRetryTimes
 				try
 					Request.send("http://miaotixing.com/trigger?id="+obj.EndMiaoCode,HttpOptions);
-				catch
-					continue;
+				catch ME
+					if strcmp(ME.identifier,'MATLAB:webservices:UnknownHost')
+						continue;
+					else
+						warning(ME.identifier,'%s',ME.message);
+						break;
+					end
 				end
 				break;
 			end
