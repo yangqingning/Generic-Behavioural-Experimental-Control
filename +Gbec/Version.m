@@ -1,4 +1,4 @@
 function V=Version
-V.Me='5.0.5';
+V.Me='5.0.6';
 V.MatlabExtension=MATLAB.Version;
 V.MATLAB='R2022a';
