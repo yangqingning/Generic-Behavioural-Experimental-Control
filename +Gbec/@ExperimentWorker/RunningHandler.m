@@ -12,8 +12,8 @@ switch Signal
 		%这里必须记录UID而不是字符串，因为还要用于断线重连
 		obj.TrialRecorder.LogEvent(TrialUID);
 		fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
-	case UID.State_SessionFinished
-		if obj.EndMiaoCode~=""
+		if TrialIndex==obj.DesignedNumTrials&&obj.EndMiaoCode~=""
+			%在最后一回合开始时就提前发送喵提醒，避免会话结束后的延迟
 			for a=0:obj.HttpRetryTimes
 				try
 					Request.send("http://miaotixing.com/trigger?id="+obj.EndMiaoCode,HttpOptions);
@@ -28,6 +28,7 @@ switch Signal
 				break;
 			end
 		end
+	case UID.State_SessionFinished
 		if ~isempty(obj.VideoInput)
 			stop(obj.VideoInput);
 		end

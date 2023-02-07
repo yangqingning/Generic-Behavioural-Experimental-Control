@@ -476,7 +476,7 @@ struct Session : public ISession {
   using TNS = TrialNumberSplit<TrialThenNumber...>;
   static bool &NeedSetup;
   constexpr static uint8_t NumDistinctTrials = std::extent_v<decltype(TNS::Numbers.Array)>;
-  static void ArrangeAndRun(const uint16_t *TrialsLeft) {
+  static void ArrangeTrials(const uint16_t *TrialsLeft) {
     TrialQueue.resize(std::accumulate(TrialsLeft, TrialsLeft + NumDistinctTrials, uint16_t(0)));
     const ITrial **TQPointer = TrialQueue.data();
     for (uint8_t T = 0; T < NumDistinctTrials; ++T) {
@@ -489,7 +489,6 @@ struct Session : public ISession {
     if (TRandom)
       std::shuffle(TrialQueue.data(), TQPointer, Urng);
     TrialsDone = 0;
-    RunAsync();
   }
 
 public:
@@ -500,7 +499,9 @@ public:
     SerialWrite(Info);
   }
   void Start() const override {
-    ArrangeAndRun(TNS::Numbers.Array);
+    ArrangeTrials(TNS::Numbers.Array);
+    SerialWrite<uint16_t>(TrialQueue.size());    
+    RunAsync();
   }
   void Restore(uint8_t NDT, const RestoreInfo *RIs) const override {
     const std::unique_ptr<uint16_t[]> NumTrialsLeft = std::make_unique<uint16_t[]>(NumDistinctTrials);
@@ -516,7 +517,8 @@ public:
         }
       NumTrialsLeft[T] = NT;
     }
-    ArrangeAndRun(NumTrialsLeft.get());
+    ArrangeTrials(NumTrialsLeft.get());
+    RunAsync();
   }
 };
 template<UID TUID, bool TRandom, typename... TrialThenNumber>

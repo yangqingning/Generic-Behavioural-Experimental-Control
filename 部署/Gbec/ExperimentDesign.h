@@ -72,7 +72,7 @@ MaxMilliseconds，最大随机毫秒数
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sCalmDown = CalmdownStep<pCapacitorOut, 1, 5000, 10000>;
+using sCalmDown = CalmdownStep<pCapacitorOut, 1, 500, 1000>;
 
 /*引脚闪烁类步骤
 
@@ -128,10 +128,10 @@ MaxMilliseconds，最大等待的毫秒数。可以设置为与MinMilliseconds�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sFixedITI = WaitStep<2, 20000>;
-using sRandomITI = WaitStep<2, 10000, 20000>;
-using sFixedPrepare = WaitStep<2, 2000>;
-using sDelay = WaitStep<2, 1000>;
+using sFixedITI = WaitStep<2, 2000>;
+using sRandomITI = WaitStep<2, 1000, 2000>;
+using sFixedPrepare = WaitStep<2, 200>;
+using sDelay = WaitStep<2, 100>;
 
 /*后台监视类步骤
 
@@ -194,7 +194,7 @@ const auto& SessionMap = SessionMap_t<
 	Trial1,Trial2,…，要运行的回合
 	Number1,Number2,…，每个回合的重复次数
 	*/
-  Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
+  Session<Session_LAWLw, true, tLightOnly, N<2>, tAudioOnly, N<2>, tWaterOnly, N<2>, tLightWater, N<2>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
   Session<Session_LightWater, false, tLightWater, N<30>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,

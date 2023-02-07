@@ -24,6 +24,8 @@ classdef ExperimentWorker<handle
 		MaxRetryTimes(1,1)uint8=3
 		%视频对象
 		VideoInput
+		%当前设计的回合总数
+		DesignedNumTrials
 	end
 	properties(Access=private)
 		Serial internal.Serialport

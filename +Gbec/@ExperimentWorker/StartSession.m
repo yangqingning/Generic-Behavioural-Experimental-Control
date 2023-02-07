@@ -44,9 +44,10 @@ while true
 			obj.EventRecorder.Reset;
 			obj.TrialRecorder.Reset;
 			obj.SignalHandler=@obj.RunningHandler;
-			obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
 			obj.State=UID.State_SessionRunning;
-			disp('会话开始');
+			obj.DesignedNumTrials=obj.Serial.read(1,'uint16');
+			fprintf('会话开始，回合总数：%u\n',obj.DesignedNumTrials);
+			obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
 			break;
 		otherwise
 			obj.HandleSignal(Signal);
