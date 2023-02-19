@@ -17,7 +17,7 @@ classdef ExperimentWorker<handle
 		%日期时间
 		DateTime
 		%鼠名
-		Mouse string
+		Mouse categorical
 		%断线重连尝试间隔秒数
 		RetryInterval(1,1)double=3
 		%断线重连尝试次数
@@ -452,9 +452,9 @@ classdef ExperimentWorker<handle
 			Design=char(obj.SessionUID);
 			Blocks=table;
 			Blocks.DateTime=obj.DateTime;
-			Blocks.Design=string(Design(9:end));
+			Blocks.Design=categorical(Design(9:end));
 			EventLog=obj.EventRecorder.GetTimeTable;
-			EventLog.Event=Gbec.LogTranslate(EventLog.Event);
+			EventLog.Event=categorical(Gbec.LogTranslate(EventLog.Event));
 			Blocks.EventLog={EventLog};
 			Blocks.BlockIndex=0x1;
 			Blocks.BlockUID=0x001;
@@ -471,7 +471,7 @@ classdef ExperimentWorker<handle
 			%split必须指定拆分维度，否则标量和向量行为不一致
 			SplitStimulus=split(Stimulus(Untranslated),'_',2);
 			Stimulus(Untranslated)=SplitStimulus(:,2);
-			Trials.Stimulus=Stimulus;
+			Trials.Stimulus=categorical(Stimulus);
 			Version=Gbec.Version;
 			save(obj.SavePath,'DateTimes','Blocks','Trials','Version');
 			SaveDirectory=fileparts(obj.SavePath);
