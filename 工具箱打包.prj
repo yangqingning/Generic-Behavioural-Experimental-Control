@@ -72,7 +72,7 @@ Debug.mlx</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="10.1.2.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(2)</requiredAddOn>
+        <requiredAddOn earliest="10.1.2.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -105,7 +105,6 @@ Debug.mlx</param.exclude.filters>
       <param.matlab.project.name />
       <param.release.current.only />
       <param.compatiblity.windows />
-      <param.installation.map />
       <param.additional.sw.names />
       <param.additional.sw.licenses />
       <param.additional.sw.win.url />
@@ -117,6 +116,7 @@ Debug.mlx</param.exclude.filters>
     </fileset.rootdir>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}\+Gbec</file>
+      <file>${PROJECT_ROOT}\+tbx_________</file>
       <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\README.md</file>
       <file>${PROJECT_ROOT}\resources</file>

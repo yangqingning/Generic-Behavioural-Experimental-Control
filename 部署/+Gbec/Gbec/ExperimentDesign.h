@@ -89,7 +89,7 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 
 using sLight = PinFlashStep<pBlueLed, 3, 200, S<Signal_LightUp>, S<Signal_LightDown>, Step_Light>;
 using sAudio = PinFlashStep<pActiveBuzzer, 3, 200, S<Signal_AudioUp>, S<Signal_AudioDown>, Step_Audio>;
-using sWater = PinFlashStep<pWaterPump, 3, 150, S<Signal_WaterOffered>, NullStep, Step_Water>;
+using sWater = PinFlashStep<pWaterPump, 3, 100, S<Signal_WaterOffered>, NullStep, Step_Water>;
 using sAir = PinFlashStep<pAirPuff, 3, 150, S<Signal_AirPuff>, NullStep, Step_Air>;
 using sTag = PinFlashStep<pCD1, 4, 200, NullStep, NullStep, Step_Tag>;
 
@@ -113,8 +113,8 @@ MissReporter，用于汇报错失的步骤。必须指定Monitor_ReportMiss旗�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sMonitorLick = MonitorStep<pCapacitorOut, 5, 1000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
-using sResponseWindow = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
+using sMonitorLick = MonitorStep<pCapacitorOut, 5, 10000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
+using sResponseWindow = MonitorStep<pCapacitorOut, 5, 20000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
 
 /*等待类步骤
 
@@ -128,10 +128,10 @@ MaxMilliseconds，最大等待的毫秒数。可以设置为与MinMilliseconds�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sFixedITI = WaitStep<2, 2000>;
-using sRandomITI = WaitStep<2, 1000, 2000>;
-using sFixedPrepare = WaitStep<2, 200>;
-using sDelay = WaitStep<2, 100>;
+using sFixedITI = WaitStep<2, 20000>;
+using sRandomITI = WaitStep<2, 10000, 20000>;
+using sFixedPrepare = WaitStep<2, 2000>;
+using sDelay = WaitStep<2, 1000>;
 
 /*后台监视类步骤
 
@@ -194,7 +194,7 @@ const auto& SessionMap = SessionMap_t<
 	Trial1,Trial2,…，要运行的回合
 	Number1,Number2,…，每个回合的重复次数
 	*/
-  Session<Session_LAWLw, true, tLightOnly, N<2>, tAudioOnly, N<2>, tWaterOnly, N<2>, tLightWater, N<2>>,
+  Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
   Session<Session_LightWater, false, tLightWater, N<30>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,

@@ -17,7 +17,7 @@ classdef ExperimentWorker<handle
 		%日期时间
 		DateTime
 		%鼠名
-		Mouse categorical
+		Mouse string
 		%断线重连尝试间隔秒数
 		RetryInterval(1,1)double=3
 		%断线重连尝试次数
@@ -447,12 +447,12 @@ classdef ExperimentWorker<handle
 			DateTimes=table;
 			obj.DateTime.Second=0;
 			DateTimes.DateTime=obj.DateTime;
-			DateTimes.Mouse=obj.Mouse;
+			DateTimes.Mouse=categorical(obj.Mouse);
 			DateTimes.Metadata={obj.GetInformation(obj.SessionUID)};
 			Design=char(obj.SessionUID);
 			Blocks=table;
 			Blocks.DateTime=obj.DateTime;
-			Blocks.Design=categorical(Design(9:end));
+			Blocks.Design=categorical(string(Design(9:end)));
 			EventLog=obj.EventRecorder.GetTimeTable;
 			EventLog.Event=categorical(Gbec.LogTranslate(EventLog.Event));
 			Blocks.EventLog={EventLog};
