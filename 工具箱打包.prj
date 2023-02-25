@@ -67,12 +67,17 @@ Debug.mlx</param.exclude.filters>
     <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
     <param.matlabpath.excludes>
       <item>/DebugOnly</item>
+      <item>/部署</item>
+      <item>/C__/Users/vhtmf/Documents/MATLAB</item>
     </param.matlabpath.excludes>
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="10.1.2.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
+        <requiredAddOn earliest="10.1.2.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(4)</requiredAddOn>
+        <requiredAddOn earliest="1.14" fromRepository="true" id="e563da55-4a80-11e4-9553-005056977bd0" include="true" latest="latest">cprintf - display formatted colored text in Command Window</requiredAddOn>
+        <requiredAddOn downloadURL="" earliest="earliest" fromRepository="false" id="f71ce85b-534c-47de-8ccf-50d6a66605a3" include="false" latest="latest">通用行为实验控制</requiredAddOn>
+        <requiredAddOn earliest="1.0.0" fromRepository="true" id="85f2e628-cb9d-426b-b596-0a88b613d14f" include="true" latest="latest">埃博拉酱的文本分析工具箱</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -122,7 +127,9 @@ Debug.mlx</param.exclude.filters>
       <file>${PROJECT_ROOT}\工具箱图像.png</file>
       <file>${PROJECT_ROOT}\部署</file>
     </fileset.rootfiles>
-    <fileset.depfun.included />
+    <fileset.depfun.included>
+      <file>C:\Users\vhtmf\Documents\MATLAB\+Gbec\UID.m</file>
+    </fileset.depfun.included>
     <fileset.depfun.excluded>
       <file>${MATLAB_ROOT}\toolbox\local\userpath.m</file>
     </fileset.depfun.excluded>
@@ -132,7 +139,7 @@ Debug.mlx</param.exclude.filters>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2023a</root>
+      <root>C:\Program Files\MATLAB\R2022b</root>
       <toolboxes />
     </matlab>
     <platform>
