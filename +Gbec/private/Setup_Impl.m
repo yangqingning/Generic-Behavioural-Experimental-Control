@@ -1,7 +1,7 @@
 function Setup_Impl
 import MATLAB.General.CopyFile
 import MATLAB.General.Delete
-import System.IO.*
+% 不能 import System.IO.*，如果用户未安装.NET桌面运行时，将不会产生正确的错误输出
 WorkingDirectory=uigetdir("","选择工作目录");
 UserDirectory=fullfile(userpath,'+Gbec');
 DeployDirectory=fullfile(fileparts(fileparts(fileparts(mfilename("fullpath")))),'部署');
@@ -32,9 +32,9 @@ if isfolder(UserDirectory)
 			return
 		end
 	else
-		OldPaths=string(Directory.GetFiles(ArduinoDirectory,'*',SearchOption.AllDirectories));
+		OldPaths=string(System.IO.Directory.GetFiles(ArduinoDirectory,'*',System.IO.SearchOption.AllDirectories));
 		[~,OldNames]=fileparts(OldPaths);
-		[~,NewNames]=fileparts(string(Directory.GetFiles(fullfile(DeployToUser,'Gbec'),'*',SearchOption.AllDirectories)));
+		[~,NewNames]=fileparts(string(System.IO.Directory.GetFiles(fullfile(DeployToUser,'Gbec'),'*',System.IO.SearchOption.AllDirectories)));
 		[~,Index]=setdiff(OldNames,NewNames);
 		Delete(OldPaths(Index));
 		[FromUser,ToUser]=FilterPaths(UserDirectory,DeployToUser);
@@ -64,11 +64,10 @@ persistent KeepNames
 if isempty(KeepNames)
 	KeepNames=["UID.h","UID.m","ExperimentDesign.h","Experiment_Client.mlx","SelfCheck_Client.mlx","LogTranslate.mlx"];
 end
-import System.IO.*
-[~,OldNames,OldExtensions]=fileparts(string(Directory.GetFiles(OldDirectory,'*',SearchOption.AllDirectories)));
-NewPaths=string(Directory.GetFiles(NewDirectory,'*',SearchOption.AllDirectories));
+[~,OldNames,OldExtensions]=fileparts(string(System.IO.Directory.GetFiles(OldDirectory,'*',System.IO.SearchOption.AllDirectories)));
+NewPaths=string(System.IO.Directory.GetFiles(NewDirectory,'*',System.IO.SearchOption.AllDirectories));
 [~,NewNames,NewExtensions]=fileparts(NewPaths);
 [~,Index]=setdiff(NewNames+NewExtensions,intersect(KeepNames,OldNames+OldExtensions));
 FromPaths=NewPaths(Index);
-ToPaths=arrayfun(@(FP)fullfile(OldDirectory,string(Path.GetRelativePath(NewDirectory,FP))),FromPaths);
+ToPaths=arrayfun(@(FP)fullfile(OldDirectory,string(System.IO.Path.GetRelativePath(NewDirectory,FP))),FromPaths);
 end
