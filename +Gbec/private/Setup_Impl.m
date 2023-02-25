@@ -7,15 +7,12 @@ UserDirectory=fullfile(userpath,'+Gbec');
 DeployDirectory=fullfile(fileparts(fileparts(fileparts(mfilename("fullpath")))),'部署');
 DeployToUser=fullfile(DeployDirectory,'+Gbec');
 DeployToWorking=fullfile(DeployDirectory,'工作目录');
+VerFile=fullfile(UserDirectory,'.ver');
 if isfolder(UserDirectory)
-	VerFile=fullfile(UserDirectory,'.ver');
 	ArduinoDirectory=fullfile(UserDirectory,'Gbec');
 	if isfile(VerFile)
 		Fid=fopen(VerFile);
-		RequestOverride=fread(Fid,1,'uint8=>uint8');
-		fclose(Fid);
-		Fid=fopen(fullfile(DeployToUser,'.ver'));
-		RequestOverride=RequestOverride<fread(Fid,1,'uint8=>uint8');
+		RequestOverride=fread(Fid,1,'uint8=>uint8')<Gbec.Version().Deploy;
 		fclose(Fid);
 		RequestOverride=isempty(RequestOverride)||RequestOverride;
 	else
@@ -24,9 +21,7 @@ if isfolder(UserDirectory)
 	if RequestOverride
 		if input('无法保留以前版本的用户配置，是否覆盖？y/n','s')=="y"
 			Delete(ArduinoDirectory);
-			CopyFile(DeployToUser,userpath);
-			CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
-			Gbec.GenerateMatlabUIDs;
+			OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 		else
 			disp('已放弃安装');
 			return
@@ -43,17 +38,13 @@ if isfolder(UserDirectory)
 	end
 elseif isfolder(WorkingDirectory)
 	if input('无法保留以前版本的用户配置，是否覆盖？y/n','s')=="y"
-		CopyFile(DeployToUser,userpath);
-		CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
-		Gbec.GenerateMatlabUIDs;
+		OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 	else
 		disp('已放弃安装');
 		return
 	end
 else
-	CopyFile(DeployToUser,userpath);
-	CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
-	Gbec.GenerateMatlabUIDs;
+	OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 end
 cd(WorkingDirectory);
 Gbec.ArduinoCppStandard;
@@ -70,4 +61,12 @@ NewPaths=string(System.IO.Directory.GetFiles(NewDirectory,'*',System.IO.SearchOp
 [~,Index]=setdiff(NewNames+NewExtensions,intersect(KeepNames,OldNames+OldExtensions));
 FromPaths=NewPaths(Index);
 ToPaths=arrayfun(@(FP)fullfile(OldDirectory,string(System.IO.Path.GetRelativePath(NewDirectory,FP))),FromPaths);
+end
+function OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile)
+CopyFile(DeployToUser,userpath);
+CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
+Gbec.GenerateMatlabUIDs;
+Fid=fopen(VerFile,'w');
+fwrite(Fid,Gbec.Version().Deploy,'uint8');
+fclose(Fid);
 end
