@@ -1,33 +1,23 @@
 function RunningHandler(obj,Signal)
 import Gbec.UID
-persistent Request HttpOptions
-if isempty(Request)
-	Request=matlab.net.http.RequestMessage;
-	HttpOptions=matlab.net.http.HTTPOptions;
-end
 switch Signal
 	case UID.Signal_TrialStart
 		TrialIndex=obj.Serial.read(1,'uint16')+1;
 		TrialUID=UID(obj.Serial.read(1,'uint8'));
 		%这里必须记录UID而不是字符串，因为还要用于断线重连
 		obj.TrialRecorder.LogEvent(TrialUID);
-		fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
-		if TrialIndex==obj.DesignedNumTrials&&obj.EndMiaoCode~=""
-			%在最后一回合开始时就提前发送喵提醒，避免会话结束后的延迟
-			for a=0:obj.HttpRetryTimes
-				try
-					Request.send("http://miaotixing.com/trigger?id="+obj.EndMiaoCode,HttpOptions);
-				catch ME
-					if strcmp(ME.identifier,'MATLAB:webservices:UnknownHost')
-						continue;
-					else
-						warning(ME.identifier,'%s',ME.message);
-						break;
-					end
-				end
-				break;
+		TrialMod=mod(TrialIndex,obj.CheckCycle);
+		if obj.EndMiaoCode~=""
+			if TrialIndex==obj.DesignedNumTrials
+				SendMiao('实验结束',obj.HttpRetryTimes,obj.MiaoCode);
+			elseif TrialMod==0
+				SendMiao(sprintf('已到%u回合，请检查实验状态',TrialIndex),obj.HttpRetryTimes,obj.MiaoCode);
 			end
 		end
+		if TrialMod==1&&TrialIndex>1
+			warning('已过%u回合，请检查实验状态',TrialIndex);
+		end
+		fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
 	case UID.State_SessionFinished
 		if ~isempty(obj.VideoInput)
 			stop(obj.VideoInput);
@@ -56,4 +46,25 @@ switch Signal
 		%为了与TrialUID保持一致，这里也记录UID而不是字符串
 		obj.EventRecorder.LogEvent(UID(Signal));
 		fprintf(' %s',Gbec.LogTranslate(Signal));
+end
+end
+function SendMiao(Note,HttpRetryTimes,MiaoCode)
+persistent Request HttpOptions
+if isempty(Request)
+	Request=matlab.net.http.RequestMessage;
+	HttpOptions=matlab.net.http.HTTPOptions;
+end
+for a=0:HttpRetryTimes
+	try
+		Request.send(sprintf('http://miaotixing.com/trigger?id=%s&text=%s',MiaoCode,Note),HttpOptions);
+	catch ME
+		if strcmp(ME.identifier,'MATLAB:webservices:UnknownHost')
+			continue;
+		else
+			warning(ME.identifier,'%s',ME.message);
+			break;
+		end
+	end
+	break;
+end
 end

@@ -7,7 +7,7 @@ classdef ExperimentWorker<handle
 		%实验结束后是否保存记录
 		SaveFile(1,1)logical
 		%喵提醒码
-		EndMiaoCode(1,1)string=""
+		MiaoCode(1,1)string=""
 		%喵提醒重试次数
 		HttpRetryTimes(1,1)uint8=3
 		%会话结束后是否自动关闭串口
@@ -26,6 +26,8 @@ classdef ExperimentWorker<handle
 		VideoInput
 		%当前设计的回合总数
 		DesignedNumTrials
+		%提醒检查回合周期
+		CheckCycle=30
 	end
 	properties(Access=private)
 		Serial internal.Serialport
