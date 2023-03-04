@@ -20,7 +20,13 @@ if isfolder(UserDirectory)
 	end
 	if RequestOverride
 		if input('无法保留以前版本的用户配置，是否覆盖？y/n','s')=="y"
-			Delete(ArduinoDirectory);
+			try
+				Delete(ArduinoDirectory);
+			catch ME
+				if ME.identifier~="MATLAB:MatlabException:File_operation_failed"
+					ME.rethrow;
+				end
+			end
 			OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 		else
 			disp('已放弃安装');
@@ -69,8 +75,8 @@ FromPaths=NewPaths(Index);
 ToPaths=arrayfun(@(FP)fullfile(OldDirectory,string(System.IO.Path.GetRelativePath(NewDirectory,FP))),FromPaths);
 end
 function OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile)
-CopyFile(DeployToUser,userpath);
-CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
+MATLAB.General.CopyFile(DeployToUser,userpath);
+MATLAB.General.CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
 Gbec.GenerateMatlabUIDs;
 Fid=fopen(VerFile,'w');
 fwrite(Fid,Gbec.Version().Deploy,'uint8');

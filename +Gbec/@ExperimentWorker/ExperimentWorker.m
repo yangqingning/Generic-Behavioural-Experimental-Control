@@ -17,7 +17,7 @@ classdef ExperimentWorker<handle
 		%日期时间
 		DateTime
 		%鼠名
-		Mouse categorical
+		Mouse string
 		%断线重连尝试间隔秒数
 		RetryInterval(1,1)double=3
 		%断线重连尝试次数
@@ -149,22 +149,6 @@ classdef ExperimentWorker<handle
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器v' Gbec.Version().Me ' by 张天夫']);
 			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial));
-			persistent NewVersion
-			if isempty(NewVersion)
-				try
-					NewVersion=webread('https://github.com/ShanghaitechGuanjisongLab/Generic-Behavioural-Experimental-Control/releases');
-				catch ME
-					if any(ME.identifier==["MATLAB:webservices:ConnectionRefused","MATLAB:webservices:UnknownHost"])
-						return;
-					else
-						ME.rethrow;
-					end
-				end
-				NewVersion=char(htmlTree(NewVersion).findElement('section:first-child span.wb-break-all').extractHTMLText);
-				if ~strcmp(NewVersion(2:end),V.Me)
-					disp(['通用行为实验控制' NewVersion '已发布，<a href="https://github.com/ShanghaitechGuanjisongLab/Generic-Behavioural-Experimental-Control/releases">立即更新</a>']);
-				end
-			end
 		end
 		function SerialInitialize(obj,SerialPort)
 			%初始化串口
@@ -465,14 +449,16 @@ classdef ExperimentWorker<handle
 			DateTimes=table;
 			obj.DateTime.Second=0;
 			DateTimes.DateTime=obj.DateTime;
-			DateTimes.Mouse=obj.Mouse;
+			DateTimes.Mouse=categorical(obj.Mouse);
 			DateTimes.Metadata={obj.GetInformation(obj.SessionUID)};
 			Design=char(obj.SessionUID);
 			Blocks=table;
 			Blocks.DateTime=obj.DateTime;
-			Blocks.Design=categorical(Design(9:end));
+			Blocks.Design=categorical(string(Design(9:end)));
 			EventLog=obj.EventRecorder.GetTimeTable;
-			EventLog.Event=categorical(Gbec.LogTranslate(EventLog.Event));
+			if ~isempty(EventLog)
+				EventLog.Event=categorical(Gbec.LogTranslate(EventLog.Event));
+			end
 			Blocks.EventLog={EventLog};
 			Blocks.BlockIndex=0x1;
 			Blocks.BlockUID=0x001;
