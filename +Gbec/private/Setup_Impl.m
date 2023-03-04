@@ -47,7 +47,13 @@ else
 	OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 end
 cd(WorkingDirectory);
-Gbec.ArduinoCppStandard;
+try
+	Gbec.ArduinoCppStandard;
+catch ME
+	if ME.identifier~="MATLAB:fopen:InvalidInput"
+		ME.rethrow;
+	end
+end
 edit Development_Client
 end
 function [FromPaths,ToPaths]=FilterPaths(OldDirectory,NewDirectory)
