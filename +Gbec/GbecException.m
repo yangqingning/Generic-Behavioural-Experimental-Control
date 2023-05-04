@@ -1,4 +1,4 @@
-classdef GbecException<MATLAB.IEnumerableException
+classdef GbecException<MATLAB.Lang.IEnumerableException
 	enumeration
 		Serial_handshake_failed
 		Test_not_found_on_Arduino
@@ -24,5 +24,7 @@ classdef GbecException<MATLAB.IEnumerableException
 		Arduino_received_unsupported_API_code
 		Cannot_get_information_while_session_running
 		Cannot_record_without_VideoInput
+		Please_install_AVR_board_platform_in_Arduino_IDE_first
+		Unsupported_NET_environment_please_restart_MATLAB
 	end
 end
