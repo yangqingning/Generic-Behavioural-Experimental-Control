@@ -21,26 +21,26 @@ void PinSetup() {
 
 // 关于计时器参数TimerCode。Arduino Mega 有0~5共6个计时器，其中1、3、4、5精度最高，2其次，0最低。应尽可能使用高精度计时器。必须使用低精度计时器的情况下，尽量给单次工作时间较长的设备分配高精度计时器。对于不可能同时工作的硬件，可以共享计时器；对于有可能需要同时工作的硬件，必须使用不同的计时器，否则会发生冲突。
 
-const auto& TestMap = TestMap_t<
+const auto &TestMap = TestMap_t<
   /*设备测试，在下方列出要运行的测试，逗号分隔。
 
-	测试有两种类型：PinFlashTest和MonitorTest。
+	  测试有两种类型：PinFlashTest和MonitorTest。
 
-	PinFlashTest<MyUID,Pin,TimerCode,Milliseconds,HighOrLow = HIGH>
-	此测试运行时，将把指定引脚设为高或低电平，在指定毫秒数后反转。
-	参数：
-	MyUID，唯一标识此测试的UID
-	Pin，要测试的设备引脚
-	TimerCode，要使用的计时器。请勿在上一测试未结束时，运行与其共享同一个计时器的下一个测试。
-	Milliseconds，单次测试中，电平维持的毫秒数
-	HighOrLow，要设为高电平还是低电平，可选HIGH或LOW
+	  PinFlashTest<MyUID,Pin,TimerCode,Milliseconds,HighOrLow = HIGH>
+	  此测试运行时，将把指定引脚设为高或低电平，在指定毫秒数后反转。
+	  参数：
+	  MyUID，唯一标识此测试的UID
+	  Pin，要测试的设备引脚
+	  TimerCode，要使用的计时器。请勿在上一测试未结束时，运行与其共享同一个计时器的下一个测试。
+	  Milliseconds，单次测试中，电平维持的毫秒数
+	  HighOrLow，要设为高电平还是低电平，可选HIGH或LOW
 
-	MonitorTest<MyUID,Pin>
-	此测试运行时，每次指定引脚从低电平变成高电平，将向串口发出Signal_MonitorHit信号。
-	参数：
-	MyUID，唯一标识此测试的UID
-	Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
-	*/
+	  MonitorTest<MyUID,Pin>
+	  此测试运行时，每次指定引脚从低电平变成高电平，将向串口发出Signal_MonitorHit信号。
+	  参数：
+	  MyUID，唯一标识此测试的UID
+	  Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
+	  */
   PinFlashTest<Test_CD1, pCD1, 0, 200>,
   PinFlashTest<Test_BlueLed, pBlueLed, 3, 200>,
   PinFlashTest<Test_ActiveBuzzer, pActiveBuzzer, 4, 200>,
@@ -58,6 +58,8 @@ const auto& TestMap = TestMap_t<
 
 template<UID Signal>
 using S = SerialWriteStep<Signal>;
+// 向串口发送信号，要求主机执行预定义的动作。可以在此步骤后添加更多步骤以配合主机的动作，例如等待主机完成动作、与主机进行必要的串口通信等，取决于主机ExperimentWorker定义的HostAction。
+using sHostAction = S<Signal_HostAction>;
 
 /*冷静类步骤
 
@@ -175,6 +177,7 @@ MyUID，标识该回合的UID，在返回信息时供人类识别
 Step1,Step2,…，依次排列要在该回合内执行的步骤
 */
 
+using tHostOnly = Trial<Trial_HostOnly, sHostAction, sTag, sFixedITI>;
 using tLightOnly = Trial<Trial_LightOnly, sCalmDown, sLight, sTag, sMonitorLick, sFixedITI>;
 using tAudioOnly = Trial<Trial_AudioOnly, sCalmDown, sAudio, sTag, sMonitorLick, sFixedITI>;
 using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick, sFixedITI>;
@@ -183,20 +186,21 @@ using tAudioWater = Trial<Trial_AudioWater, sCalmDown, sAudio, sTag, sMonitorLic
 using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sLight, sDelay, sAir, sRandomITI>;
 using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
 
-const auto& SessionMap = SessionMap_t<
+const auto &SessionMap = SessionMap_t<
   /*会话设计
-	一个实验会话定义了要做哪几种回合，每种回合重复多少次，以及是固定顺序还是随机穿插。在下方列出会话设计项，语法：
-	Session<MyUID,Random,Trial1,N<Numer1>,Trial2,N<Number2>,…>;
+	  一个实验会话定义了要做哪几种回合，每种回合重复多少次，以及是固定顺序还是随机穿插。在下方列出会话设计项，语法：
+	  Session<MyUID,Random,Trial1,N<Numer1>,Trial2,N<Number2>,…>;
 
-	参数：
-	MyUID，标识该会话的UID，在返回信息时供人类识别，以及电脑给Arduion指示该运行哪个会话
-	Random，若true则每个回合将打乱顺序随机穿插，若false则按照定义的顺序逐个运行
-	Trial1,Trial2,…，要运行的回合
-	Number1,Number2,…，每个回合的重复次数
-	*/
+	  参数：
+	  MyUID，标识该会话的UID，在返回信息时供人类识别，以及电脑给Arduion指示该运行哪个会话
+	  Random，若true则每个回合将打乱顺序随机穿插，若false则按照定义的顺序逐个运行
+	  Trial1,Trial2,…，要运行的回合
+	  Number1,Number2,…，每个回合的重复次数
+	  */
   Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
   Session<Session_LightWater, false, tLightWater, N<30>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,
   Session<Session_LightAir, false, tLightAir, N<30>>,
-  Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>> >;
+  Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
+  Session<Session_HostOnly, false, tHostOnly, N<30>>>;

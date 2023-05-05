@@ -28,6 +28,10 @@ classdef ExperimentWorker<handle
 		DesignedNumTrials
 		%提醒检查回合周期
 		CheckCycle=30
+		%Arduino发来HostAction信号时，将调用此函数句柄。
+		%函数应接受(internal.Serialport,MATLAB.EventLogger)输入，前者用于串口通信，后者用于记录事件。函数可以自定义需要与串口进行的任何其它通信操作，并记录发生的事
+		% 件。
+		HostAction
 	end
 	properties(Access=private)
 		Serial internal.Serialport

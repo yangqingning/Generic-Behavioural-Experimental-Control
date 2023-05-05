@@ -1,6 +1,6 @@
 function Setup_Impl
-import MATLAB.General.CopyFile
-import MATLAB.General.Delete
+import MATLAB.IO.CopyFile
+import MATLAB.IO.Delete
 % 不能 import System.IO.*，如果用户未安装.NET桌面运行时，将不会产生正确的错误输出
 WorkingDirectory=uigetdir("","选择工作目录");
 UserDirectory=fullfile(userpath,'+Gbec');
@@ -75,8 +75,8 @@ FromPaths=NewPaths(Index);
 ToPaths=arrayfun(@(FP)fullfile(OldDirectory,string(System.IO.Path.GetRelativePath(NewDirectory,FP))),FromPaths);
 end
 function OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile)
-MATLAB.General.CopyFile(DeployToUser,userpath);
-MATLAB.General.CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
+MATLAB.IO.CopyFile(DeployToUser,userpath);
+MATLAB.IO.CopyFile(fullfile(DeployToWorking,'*'),WorkingDirectory);
 Gbec.GenerateMatlabUIDs;
 Fid=fopen(VerFile,'w');
 fwrite(Fid,Gbec.Version().Deploy,'uint8');
