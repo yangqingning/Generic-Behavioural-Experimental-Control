@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include "ISession.h"
 #include "SerialIO.h"
 #include <algorithm>
