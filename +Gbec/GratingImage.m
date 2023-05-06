@@ -37,6 +37,7 @@ classdef GratingImage<Gbec.IHostAction
 			end
 			obj.Timer.start;
 			EventLogger.LogEvent(Signal);
+			fprintf(' %s',Gbec.LogTranslate(Signal));
 		end
 		function Information=GetInformation(obj)
 			%会话结束后，通过此方法获取信息

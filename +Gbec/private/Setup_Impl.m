@@ -19,7 +19,7 @@ if isfolder(UserDirectory)
 		RequestOverride=true;
 	end
 	if RequestOverride
-		if input('无法保留以前版本的用户配置，是否覆盖？y/n','s')=="y"
+		if questdlg('无法保留以前版本的用户配置','是否覆盖？','确定','取消','确定')=="确定"
 			try
 				Delete(ArduinoDirectory);
 			catch ME
@@ -43,7 +43,7 @@ if isfolder(UserDirectory)
 		CopyFile([FromUser,FromWorking],[ToUser,ToWorking]);
 	end
 elseif isfolder(WorkingDirectory)
-	if input('无法保留以前版本的用户配置，是否覆盖？y/n','s')=="y"
+	if questdlg('无法保留以前版本的用户配置','是否覆盖？','确定','取消','确定')=="确定"
 		OverwriteInstall(DeployToUser,DeployToWorking,WorkingDirectory,VerFile);
 	else
 		disp('已放弃安装');

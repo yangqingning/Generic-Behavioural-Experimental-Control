@@ -72,7 +72,7 @@ MaxMilliseconds，最大随机毫秒数
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sCalmDown = CalmdownStep<pCapacitorOut, 1, 500, 1000>;
+using sCalmDown = CalmdownStep<pCapacitorOut, 1, 5000, 10000>;
 
 /*引脚闪烁类步骤
 
@@ -113,8 +113,8 @@ MissReporter，用于汇报错失的步骤。必须指定Monitor_ReportMiss旗�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sMonitorLick = MonitorStep<pCapacitorOut, 5, 10000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
-using sResponseWindow = MonitorStep<pCapacitorOut, 5, 20000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
+using sMonitorLick = MonitorStep<pCapacitorOut, 5, 1000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
+using sResponseWindow = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
 
 /*等待类步骤
 
@@ -132,6 +132,8 @@ using sFixedITI = WaitStep<2, 20000>;
 using sRandomITI = WaitStep<2, 10000, 20000>;
 using sFixedPrepare = WaitStep<2, 2000>;
 using sDelay = WaitStep<2, 1000>;
+using sShortITI = WaitStep<2, 10000>;
+using sRandomPrepare = WaitStep<2, 0, 10000>;
 
 /*后台监视类步骤
 
@@ -175,8 +177,8 @@ MyUID，标识该回合的UID，在返回信息时供人类识别
 Step1,Step2,…，依次排列要在该回合内执行的步骤
 */
 
-using tLFImage=Trial<Trial_LFImage,S<Signal_HostAction>,S<Signal_LFImage>,sTag,sRandomITI>;
-using tHFImage=Trial<Trial_HFImage,S<Signal_HostAction>,S<Signal_HFImage>,sTag,sRandomITI>;
+using tLFImage = Trial<Trial_LFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_LFImage>, sTag, sShortITI>;
+using tHFImage = Trial<Trial_HFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_HFImage>, sTag, sShortITI>;
 using tLightOnly = Trial<Trial_LightOnly, sCalmDown, sLight, sTag, sMonitorLick, sFixedITI>;
 using tAudioOnly = Trial<Trial_AudioOnly, sCalmDown, sAudio, sTag, sMonitorLick, sFixedITI>;
 using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick, sFixedITI>;
@@ -203,4 +205,4 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_LightAir, false, tLightAir, N<30>>,
   Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
   //此会话要求主机端配置能根据串口指示显示高低频图像的HostAction
-  Session<Session_HLFImage, true, tLFImage, N<30>,tHFImage,N<30>>>;
+  Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>>;

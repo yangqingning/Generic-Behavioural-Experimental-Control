@@ -31,7 +31,7 @@ classdef ExperimentWorker<handle
 		%Arduino发来HostAction信号时，将调用此函数句柄。
 		%函数应接受(internal.Serialport,MATLAB.EventLogger)输入，前者用于串口通信，后者用于记录事件。函数可以自定义需要与串口进行的任何其它通信操作，并记录发生的事
 		% 件。
-		HostAction Gbec.IHostAction
+		HostAction
 	end
 	properties(Access=private)
 		Serial internal.Serialport
@@ -62,7 +62,7 @@ classdef ExperimentWorker<handle
 				stop(obj.VideoInput);
 			end
 			if obj.SaveFile
-				if input("实验已放弃，是否保存现有数据？y/n","s")~="n"
+				if questdlg('是否保存现有数据？','实验已放弃','确定','取消','确定')~="取消"
 					obj.SaveInformation;
 				else
 					delete(obj.SavePath);
