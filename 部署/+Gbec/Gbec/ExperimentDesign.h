@@ -58,8 +58,6 @@ const auto &TestMap = TestMap_t<
 
 template<UID Signal>
 using S = SerialWriteStep<Signal>;
-// 向串口发送信号，要求主机执行预定义的动作。可以在此步骤后添加更多步骤以配合主机的动作，例如等待主机完成动作、与主机进行必要的串口通信等，取决于主机ExperimentWorker定义的HostAction。
-using sHostAction = S<Signal_HostAction>;
 
 /*冷静类步骤
 
@@ -177,7 +175,8 @@ MyUID，标识该回合的UID，在返回信息时供人类识别
 Step1,Step2,…，依次排列要在该回合内执行的步骤
 */
 
-using tHostOnly = Trial<Trial_HostOnly, sHostAction, sTag, sFixedITI>;
+using tLFImage=Trial<Trial_LFImage,S<Signal_HostAction>,S<Signal_LFImage>,sTag,sRandomITI>;
+using tHFImage=Trial<Trial_HFImage,S<Signal_HostAction>,S<Signal_HFImage>,sTag,sRandomITI>;
 using tLightOnly = Trial<Trial_LightOnly, sCalmDown, sLight, sTag, sMonitorLick, sFixedITI>;
 using tAudioOnly = Trial<Trial_AudioOnly, sCalmDown, sAudio, sTag, sMonitorLick, sFixedITI>;
 using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick, sFixedITI>;
@@ -203,4 +202,5 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_AudioWater, false, tAudioWater, N<30>>,
   Session<Session_LightAir, false, tLightAir, N<30>>,
   Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
-  Session<Session_HostOnly, false, tHostOnly, N<30>>>;
+  //此会话要求主机端配置能根据串口指示显示高低频图像的HostAction
+  Session<Session_HLFImage, true, tLFImage, N<30>,tHFImage,N<30>>>;

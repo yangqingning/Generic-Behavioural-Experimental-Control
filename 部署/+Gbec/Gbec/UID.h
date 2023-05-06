@@ -104,6 +104,8 @@ enum UID : uint8_t {
   Signal_ApiFound,
   Signal_ApiInvalid,
   Signal_HostAction,
+  Signal_LFImage,
+  Signal_HFImage,
 
   // 测试UID
 
@@ -150,6 +152,8 @@ enum UID : uint8_t {
   Trial_StopMonitor,
   Trial_LightDelayWater,
   Trial_HostOnly,
+  Trial_LFImage,
+  Trial_HFImage,
 
   // 会话UID
 
@@ -160,5 +164,5 @@ enum UID : uint8_t {
   Session_AudioWater,
   Session_LightAir,
   Session_SurveillanceThroughout,
-  Session_HostOnly,
+  Session_HLFImage
 };

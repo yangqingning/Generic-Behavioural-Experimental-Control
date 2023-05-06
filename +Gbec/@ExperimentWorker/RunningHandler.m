@@ -44,9 +44,9 @@ switch Signal
 		end
 	case UID.Signal_HostAction
 		if isempty(obj.HostAction)
-			warning('Arduino端要求HostAction，但HostAction未定义');
+			Gbec.GbecException.Arduino_requires_undefined_HostAction.Throw;
 		else
-			obj.HostAction(obj.Serial,obj.EventRecorder);
+			obj.HostAction.Run(obj.Serial,obj.EventRecorder);
 		end
 	otherwise
 		%为了与TrialUID保持一致，这里也记录UID而不是字符串

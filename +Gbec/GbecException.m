@@ -26,5 +26,6 @@ classdef GbecException<MATLAB.Lang.IEnumerableException
 		Cannot_record_without_VideoInput
 		Please_install_AVR_board_platform_in_Arduino_IDE_first
 		Unsupported_NET_environment_please_restart_MATLAB
+		Arduino_requires_undefined_HostAction
 	end
 end

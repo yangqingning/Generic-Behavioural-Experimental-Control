@@ -31,7 +31,7 @@ classdef ExperimentWorker<handle
 		%Arduino发来HostAction信号时，将调用此函数句柄。
 		%函数应接受(internal.Serialport,MATLAB.EventLogger)输入，前者用于串口通信，后者用于记录事件。函数可以自定义需要与串口进行的任何其它通信操作，并记录发生的事
 		% 件。
-		HostAction
+		HostAction Gbec.IHostAction
 	end
 	properties(Access=private)
 		Serial internal.Serialport
@@ -182,52 +182,6 @@ classdef ExperimentWorker<handle
 			obj.Serial.configureCallback("off");
 			obj.SignalHandler=function_handle.empty;
 		end
-		function StartTest(obj,TestUID,TestTimes)
-			%开始运行测试
-			%测试分为自动结束和手动结束两种类型。自动结束类型可以指定测试次数，默认1次；手动结束类型则无所谓测试次数，需要使用StopTest才能停止。
-			%# 语法
-			% ```MATLAB
-			% obj.StartTest(TestUID);
-			% %开始具有指定UID的测试
-			%
-			% obj.StartTest(TestUID,TestTimes);
-			% %额外指定测试次数
-			% ```
-			%# 输入参数
-			% TestUID(1,1)Gbec.UID，要开始的测试UID
-			% TestTimes(1,1)=1，测试次数。如果是手动结束类测试，该参数将被忽略
-			arguments
-				obj
-				TestUID
-				TestTimes=1
-			end
-			import Gbec.UID
-			obj.WatchDog.stop;
-			obj.ApiCall(UID.API_TestStart);
-			obj.Serial.write(TestUID,'uint8');
-			obj.Serial.write(TestTimes,'uint16');
-			while true
-				Signal=obj.WaitForSignal;
-				switch Signal
-					case UID.Signal_NoSuchTest
-						Gbec.GbecException.Test_not_found_in_Arduino.Throw;
-					case UID.Signal_TestStartedAutoStop
-						disp('测试开始（自动结束）');
-						break;
-					case UID.Signal_TestStartedManualStop
-						disp('测试开始（手动结束）');
-						obj.SignalHandler=@obj.TestHandler;
-						obj.Serial.configureCallback('byte',1,@obj.SerialCallback);
-						break;
-					case UID.State_SessionRunning
-						Gbec.GbecException.Cannot_test_while_session_running.Throw;
-					case UID.State_SessionPaused
-						Gbec.GbecException.Cannot_test_while_session_paused.Throw;
-					otherwise
-						obj.HandleSignal(Signal);
-				end
-			end
-		end
 		function StopTest(obj,TestUID)
 			%停止测试
 			%仅适用于手动结束类测试。自动结束类测试不能停止。
@@ -265,49 +219,6 @@ classdef ExperimentWorker<handle
 				end
 			end
 		end
-		function OneEnterOneCheck(obj,TestUID,EnterPrompt)
-			%对于自动结束类测试，提供一个"按一次回车测试一次"的友好交互
-			%调用此方法后，会在命令行窗口显示提示，等待用户输入，用户按回车则运行一次测试，输入任意字符后按回车则停止测试。详见SelfCheck_Client.mlx中的示例用法。手动
-			% 结束类测试不支持此方法。
-			%# 语法
-			% ```MATLAB
-			% obj.OneEnterOneCheck(TestUID,EnterPrompt);
-			% ```
-			%# 输入参数
-			%TestUID(1,1)Gbec.UID，要运行的测试UID，必须是自动结束类测试
-			%EnterPrompt(1,1)string，提示文字，将显示在命令行中
-			import Gbec.UID
-			import Gbec.GbecException
-			obj.WatchDog.stop;
-			while input(EnterPrompt,"s")==""
-				obj.ApiCall(UID.API_TestStart);
-				obj.Serial.write(TestUID,'uint8');
-				obj.Serial.write(1,'uint16');
-				while true
-					Signal=obj.WaitForSignal;
-					switch Signal
-						case UID.Signal_NoSuchTest
-							GbecException.Test_not_found_in_Arduino.Throw;
-						case UID.Signal_TestStartedAutoStop
-							break;
-						case UID.Signal_TestStartedManualStop
-							obj.ApiCall(UID.API_TestStop);
-							obj.Serial.write(TestUID,'uint8');
-							if obj.WaitForSignal==UID.Signal_TestStopped
-								GbecException.Cannot_OneEnterOneCheck_on_manually_stopped_test.Throw;
-							else
-								GbecException.Unexpected_response_from_Arduino.Throw;
-							end
-						case UID.State_SessionRunning
-							GbecException.Cannot_test_while_session_running.Throw;
-						case UID.State_SessionPaused
-							Gbec.GbecException.Cannot_test_while_session_paused.Throw;
-						otherwise
-							obj.HandleSignal(Signal);
-					end
-				end
-			end
-		end
 		function PauseSession(obj)
 			%暂停会话
 			import Gbec.UID
@@ -334,41 +245,6 @@ classdef ExperimentWorker<handle
 						GbecException.Cannot_pause_a_finished_session.Throw;
 					otherwise
 						obj.HandleSignal(Signal);
-				end
-			end
-		end
-		function ContinueSession(obj)
-			%继续会话
-			import Gbec.UID
-			import Gbec.GbecException
-			if obj.State==UID.State_SessionRestored
-				obj.RestoreSession;
-				obj.EventRecorder.LogEvent(UID.Signal_SessionContinue);
-				disp('会话继续');
-				obj.State=UID.State_SessionRunning;
-			else
-				obj.ApiCall(UID.API_Continue);
-				while true
-					Signal=obj.WaitForSignal;
-					switch Signal
-						case UID.State_SessionInvalid
-							GbecException.No_sessions_are_running.Throw;
-						case UID.Signal_SessionContinue
-							obj.EventRecorder.LogEvent(UID.Signal_SessionContinue);
-							disp('会话继续');
-							obj.SignalHandler=@obj.RunningHandler;
-							obj.Serial.configureCallback('byte',1,@obj.SerialCallback);
-							obj.State=UID.State_SessionRunning;
-							break;
-						case UID.State_SessionAborted
-							GbecException.Cannot_continue_an_aborted_session.Throw;
-						case UID.State_SessionFinished
-							GbecException.Cannot_continue_a_finished_session.Throw;
-						case UID.State_SessionRunning
-							GbecException.Cannot_continue_a_running_session.Throw;
-						otherwise
-							obj.HandleSignal(Signal);
-					end
 				end
 			end
 		end
@@ -426,7 +302,7 @@ classdef ExperimentWorker<handle
 			%# 返回值
 			% Information(1,1)struct，信息结构体
 			arguments
-				obj
+				obj Gbec.ExperimentWorker
 				SessionUID=Gbec.UID.Session_Current
 			end
 			import Gbec.UID
@@ -440,6 +316,9 @@ classdef ExperimentWorker<handle
 						Gbec.GbecException.Must_run_session_before_getting_information.Throw;
 					case UID.Signal_InfoStart
 						Information=CollectStruct(obj.Serial);
+						if ~isempty(obj.HostAction)
+							Information.HostAction=obj.HostAction.GetInformation;
+						end
 						break;
 					case UID.State_SessionRunning
 						Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
@@ -447,43 +326,6 @@ classdef ExperimentWorker<handle
 						obj.HandleSignal(Signal);
 				end
 			end
-		end
-		function SaveInformation(obj)
-			%获取并保存上次运行的会话信息到SaveFile文件。
-			DateTimes=table;
-			obj.DateTime.Second=0;
-			DateTimes.DateTime=obj.DateTime;
-			DateTimes.Mouse=categorical(obj.Mouse);
-			DateTimes.Metadata={obj.GetInformation(obj.SessionUID)};
-			Design=char(obj.SessionUID);
-			Blocks=table;
-			Blocks.DateTime=obj.DateTime;
-			Blocks.Design=categorical(string(Design(9:end)));
-			EventLog=obj.EventRecorder.GetTimeTable;
-			if ~isempty(EventLog)
-				EventLog.Event=categorical(Gbec.LogTranslate(EventLog.Event));
-			end
-			Blocks.EventLog={EventLog};
-			Blocks.BlockIndex=0x1;
-			Blocks.BlockUID=0x001;
-			Trials=table;
-			Stimulus=obj.TrialRecorder.GetTimeTable;
-			NumTrials=height(Stimulus);
-			TrialIndex=(0x001:NumTrials)';
-			Trials.TrialUID=TrialIndex;
-			Trials.BlockUID(:)=0x001;
-			Trials.TrialIndex=TrialIndex;
-			Trials.Time=Stimulus.Time;
-			Stimulus=Gbec.LogTranslate(Stimulus.Event);
-			Untranslated=startsWith(Stimulus,'Trial_');
-			%split必须指定拆分维度，否则标量和向量行为不一致
-			SplitStimulus=split(Stimulus(Untranslated),'_',2);
-			Stimulus(Untranslated)=SplitStimulus(:,2);
-			Trials.Stimulus=categorical(Stimulus);
-			Version=Gbec.Version;
-			save(obj.SavePath,'DateTimes','Blocks','Trials','Version');
-			SaveDirectory=fileparts(obj.SavePath);
-			disp("数据已保存到"+"<a href=""matlab:winopen('"+obj.SavePath+"');"">"+obj.SavePath+"</a> <a href=""matlab:cd('"+SaveDirectory+"');"">切换当前文件夹</a> <a href=""matlab:winopen('"+SaveDirectory+"');"">打开数据文件夹</a>");
 		end
 		function PeekState(EW)
 			%观察会话当前的运行状态
