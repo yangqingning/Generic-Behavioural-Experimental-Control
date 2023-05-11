@@ -12,6 +12,7 @@ Pin pAirPuff = 7;
 Pin pCapacitorVdd = 22;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
+Pin pLaser = 4;
 
 // 设备特定初始化，例如电容的启动
 void PinSetup() {
@@ -47,7 +48,8 @@ const auto &TestMap = TestMap_t<
   PinFlashTest<Test_Water, pWaterPump, 5, 150>,
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
   PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
-  MonitorTest<Test_CapacitorMonitor, pCapacitorOut>>;
+  MonitorTest<Test_CapacitorMonitor, pCapacitorOut>,
+  SquareWaveTest<Test_SquareWave, pLaser, 3, 30, 30, 30>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
@@ -92,6 +94,7 @@ using sAudio = PinFlashStep<pActiveBuzzer, 3, 200, S<Signal_AudioUp>, S<Signal_A
 using sWater = PinFlashStep<pWaterPump, 3, 100, S<Signal_WaterOffered>, NullStep, Step_Water>;
 using sAir = PinFlashStep<pAirPuff, 3, 150, S<Signal_AirPuff>, NullStep, Step_Air>;
 using sTag = PinFlashStep<pCD1, 4, 200, NullStep, NullStep, Step_Tag>;
+using sSquareWave = SquareWaveStep<pLaser, 3, 30, 30, 30, S<Signal_Laser>, NullStep, Step_SquareWave>;
 
 /*监视类步骤
 

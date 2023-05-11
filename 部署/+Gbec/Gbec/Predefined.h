@@ -1,4 +1,4 @@
- #pragma once
+#pragma once
 #include "ISession.h"
 #include "SerialIO.h"
 #include <algorithm>
@@ -84,6 +84,20 @@ public:
   }
   void Stop() const override {
     DetachInterrupt<ReadPin>(ReportHit);
+  }
+};
+// 测试具有指定高电平和低电平毫秒数和循环次数的方波
+template<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t NumCycles>
+struct SquareWaveTest : public ITest {
+  constexpr SquareWaveTest()
+    : ITest(TMyUID) {}
+  bool Start(uint16_t TestTimes) const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+    TimersOneForAll::SquareWave<TimerCode, Pin, HighMilliseconds, LowMilliseconds>(NumCycles * TestTimes);
+    return true;
   }
 };
 template<typename T>
@@ -405,6 +419,22 @@ struct ToneStep : public IStep {
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_FrequencyHz, FrequencyHz, Info_Milliseconds, Milliseconds);
 };
+//播放具有指定高电平和低电平毫秒数的方波。异步执行，步骤不阻塞时相。
+template<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t NumCycles, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_SquareWave>
+struct SquareWaveStep : public IStep {
+  bool Start(void (*)()) const override {
+    if (!IsNS<UpReporter>)
+      Report<UpReporter>();
+    TimersOneForAll::SquareWave<TimerCode, Pin, HighMilliseconds, LowMilliseconds, NumCycles, IsNS<DownReporter> ? nullptr : Report<DownReporter>>();
+  }
+  void Setup() const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+  }
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_HighMilliseconds, HighMilliseconds, Info_LowMilliseconds, LowMilliseconds, Info_NumCycles, NumCycles);
+};
 template<UID TUID, typename... TSteps>
 class Trial : public ITrial {
   static bool &NeedSetup;
@@ -500,7 +530,7 @@ public:
   }
   void Start() const override {
     ArrangeTrials(TNS::Numbers.Array);
-    SerialWrite<uint16_t>(TrialQueue.size());    
+    SerialWrite<uint16_t>(TrialQueue.size());
     RunAsync();
   }
   void Restore(uint8_t NDT, const RestoreInfo *RIs) const override {
