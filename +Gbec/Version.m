@@ -1,7 +1,7 @@
 function V=Version
 V.Me='v5.2.0';
 V.MatlabExtension=MATLAB.Version;
-V.MATLAB='R2022a';
+V.MATLAB='R2022b';
 V.Deploy=3;
 persistent NewVersion
 if isempty(NewVersion)

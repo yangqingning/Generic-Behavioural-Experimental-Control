@@ -75,7 +75,7 @@ Debug.mlx</param.exclude.filters>
     <param.required.addons>
       <requiredaddons>
         <requiredAddOn earliest="1.14" fromRepository="true" id="e563da55-4a80-11e4-9553-005056977bd0" include="true" latest="latest">cprintf - display formatted colored text in Command Window</requiredAddOn>
-        <requiredAddOn earliest="13.0.0.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(2)</requiredAddOn>
+        <requiredAddOn earliest="14.0.0.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(2)</requiredAddOn>
         <requiredAddOn earliest="1.0.1.0" fromRepository="true" id="85f2e628-cb9d-426b-b596-0a88b613d14f" include="true" latest="latest">埃博拉酱的文本分析工具箱</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
