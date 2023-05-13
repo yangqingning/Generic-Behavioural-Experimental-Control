@@ -41,8 +41,8 @@ classdef ExperimentWorker<handle
 		SignalHandler
 	end
 	properties(GetAccess=private,SetAccess=immutable)
-		EventRecorder(1,1)MATLAB.EventLogger
-		TrialRecorder(1,1)MATLAB.EventLogger
+		EventRecorder MATLAB.DataTypes.EventLogger
+		TrialRecorder MATLAB.DataTypes.EventLogger
 	end
 	properties(Dependent)
 		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
@@ -153,6 +153,8 @@ classdef ExperimentWorker<handle
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
 			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial));
+			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
+			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 		end
 		function SerialInitialize(obj,SerialPort)
 			%初始化串口
