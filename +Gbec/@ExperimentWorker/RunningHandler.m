@@ -6,6 +6,7 @@ switch Signal
 		TrialUID=UID(obj.Serial.read(1,'uint8'));
 		%这里必须记录UID而不是字符串，因为还要用于断线重连
 		obj.TrialRecorder.LogEvent(TrialUID);
+		obj.EventRecorder.LogEvent(UID.Signal_TrialStart)
 		TrialMod=mod(TrialIndex,obj.CheckCycle);
 		if obj.MiaoCode~=""
 			if TrialIndex==obj.DesignedNumTrials
