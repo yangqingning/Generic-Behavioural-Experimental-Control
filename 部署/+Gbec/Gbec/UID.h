@@ -163,7 +163,7 @@ enum UID : uint8_t {
 
   // 会话UID
 
-  Session_Current,
+  Session_Current,//内部使用，请勿修改
   Session_LAWLwAw,
   Session_LAWLw,
   Session_LightWater,
