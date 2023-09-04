@@ -1,6 +1,7 @@
 classdef ExperimentWorker<handle
 	%实验主控制器
 	%一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
+	%此类不支持直接构造。使用静态方法New获取此类的实例。
 	properties
 		%实验记录保存路径
 		SavePath(1,1)string
@@ -33,14 +34,14 @@ classdef ExperimentWorker<handle
 		% 件。
 		HostAction
 	end
-	properties(Access=private)
+	properties(Access=protected)
 		Serial internal.Serialport
 		State=Gbec.UID.State_SessionInvalid
 		%没有对象无法初始化
 		WatchDog
 		SignalHandler
 	end
-	properties(GetAccess=private,SetAccess=immutable)
+	properties(GetAccess=protected,SetAccess=immutable)
 		EventRecorder MATLAB.DataTypes.EventLogger
 		TrialRecorder MATLAB.DataTypes.EventLogger
 	end
@@ -48,13 +49,7 @@ classdef ExperimentWorker<handle
 		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
 		SerialFreeTime(1,1)double
 	end
-	methods(Static,Access=private)
-		function ReleaseSerial(Serial)
-			delete(Serial);
-			disp('串口已释放');
-		end
-	end
-	methods(Access=private)
+	methods(Access=protected)
 		function AbortAndSave(obj)
 			obj.EventRecorder.LogEvent(Gbec.UID.State_SessionAborted);
 			disp('会话已放弃');
@@ -147,15 +142,30 @@ classdef ExperimentWorker<handle
 			end
 		end
 		RunningHandler(obj,Signal)
-	end
-	methods
 		function obj=ExperimentWorker
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
-			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial));
+			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 		end
+	end
+	methods(Static)
+		function obj=New
+			%获取一个用MATLAB.Lang.Owner包装的ExperimentWorker实例。
+			%Owner会将对对象的所有操作转发给其所包装的实例。始终通过Owner访问ExperimentWorker，不要使用裸的
+			% ExperimentWorker句柄，否则可能造成资源无法正确释放。
+			%# 语法
+			% ```
+			% obj=Gbec.ExperimentWorker.New;
+			% ```
+			%# 返回值
+			% obj(1,1)MATLAB.Lang.Owner<ExperimentWorker>
+			%See also MATLAB.Lang.Owner
+			obj=MATLAB.Lang.Owner(Gbec.ExperimentWorker);
+		end
+	end
+	methods
 		function SerialInitialize(obj,SerialPort)
 			%初始化串口
 			%# 语法
@@ -177,7 +187,7 @@ classdef ExperimentWorker<handle
 				else
 					Gbec.GbecException.Serial_handshake_failed.Throw;
 				end
-				obj.WatchDog.TimerFcn=@(~,~)Gbec.ExperimentWorker.ReleaseSerial(obj.Serial);
+				obj.WatchDog.TimerFcn=@(~,~)ReleaseSerial(obj.Serial);
 				obj.Serial.ErrorOccurredFcn=@obj.InterruptRetry;
 			end
 			obj.WatchDog.stop;
@@ -335,4 +345,8 @@ classdef ExperimentWorker<handle
 			disp(Gbec.UID(EW.WaitForSignal));
 		end
 	end
+end
+function ReleaseSerial(Serial)
+delete(Serial);
+disp('串口已释放');
 end

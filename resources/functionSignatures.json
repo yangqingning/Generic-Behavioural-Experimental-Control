@@ -22,68 +22,147 @@
 		]
 	},
 	"Gbec.ExperimentWorker.StartTest": {
-		"inputs":[
+		"inputs": [
 			{
-				"name":"obj"
+				"name": "obj"
 			},
 			{
-				"name":"TestUID",
-				"kind":"required",
-				"type":["scalar","Gbec.UID"],
-				"purpose":"要开始的测试UID"
+				"name": "TestUID",
+				"kind": "required",
+				"type": [
+					"scalar",
+					"Gbec.UID"
+				],
+				"purpose": "要开始的测试UID"
 			},
 			{
-				"name":"TestTimes",
-				"kind":"ordered",
-				"type":"positive",
-				"purpose":"测试次数",
-				"default":1
+				"name": "TestTimes",
+				"kind": "ordered",
+				"type": "positive",
+				"purpose": "测试次数",
+				"default": 1
 			}
 		]
 	},
-	"Gbec.ExperimentWorker.StopTest":{
-		"inputs":[
+	"Gbec.ExperimentWorker.StopTest": {
+		"inputs": [
 			{
-				"name":"obj"
+				"name": "obj"
 			},
 			{
-				"name":"TestUID",
-				"kind":"ordered",
-				"type":["scalar","Gbec.UID"],
-				"purpose":"要停止的测试UID"
+				"name": "TestUID",
+				"kind": "ordered",
+				"type": [
+					"scalar",
+					"Gbec.UID"
+				],
+				"purpose": "要停止的测试UID"
 			}
 		]
 	},
-	"Gbec.ExpeirmentWorker.OneEnterOneCheck":{
-		"inputs":[
+	"Gbec.ExpeirmentWorker.OneEnterOneCheck": {
+		"inputs": [
 			{
-				"name":"obj"
+				"name": "obj"
 			},
 			{
-				"name":"TestUID",
-				"kind":"required",
-				"type":["scalar","Gbec.UID"],
-				"purpose":"要运行的测试UID"
+				"name": "TestUID",
+				"kind": "required",
+				"type": [
+					"scalar",
+					"Gbec.UID"
+				],
+				"purpose": "要运行的测试UID"
 			},
 			{
-				"name":"EnterPrompt",
-				"kind":"required",
-				"type":[["string","scalar"],["char","row"]],
-				"purpose":"提示文字"
+				"name": "EnterPrompt",
+				"kind": "required",
+				"type": [
+					[
+						"string",
+						"scalar"
+					],
+					[
+						"char",
+						"row"
+					]
+				],
+				"purpose": "提示文字"
 			}
 		]
 	},
-	"Gbec.ExperimentWorker.GetInformation":{
-		"inputs":[
+	"Gbec.ExperimentWorker.GetInformation": {
+		"inputs": [
 			{
-				"name":"obj"
+				"name": "obj"
 			},
 			{
-				"name":"SessionUID",
-				"kind":"ordered",
-				"type":["scalar","Gbec.UID"],
-				"purpose":"要获取的会话UID"
+				"name": "SessionUID",
+				"kind": "ordered",
+				"type": [
+					"scalar",
+					"Gbec.UID"
+				],
+				"purpose": "要获取的会话UID"
 			}
 		]
-	}
+	},
+	"Gbec.GratingImage.New": {
+		"inputs": [
+			{
+				"name": "AngleRange",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "顺时针旋转弧度"
+			},
+			{
+				"name": "DurationRange",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "图像呈现的秒数"
+			},
+			{
+				"name": "InitialPhase",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "周期变化的初始正弦相位弧度"
+			},
+			{
+				"name": "PixelsPerCycle",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "每个周期的像素数"
+			},
+			{
+				"name": "CyclesPerWidth",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "图像宽度是周期的几倍"
+			},
+			{
+				"name": "CyclesPerHeight",
+				"kind": "namevalue",
+				"type": [
+					"real",
+					"vector"
+				],
+				"purpose": "图像高度是周期的几倍"
+			}
+		]
+	},
 }
