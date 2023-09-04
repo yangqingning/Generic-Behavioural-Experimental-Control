@@ -182,6 +182,7 @@ Step1,Step2,…，依次排列要在该回合内执行的步骤
 
 using tLFImage = Trial<Trial_LFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_LFImage>, sTag, sShortITI>;
 using tHFImage = Trial<Trial_HFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_HFImage>, sTag, sShortITI>;
+using tRandomImage = Trial<Trial_RandomImage, sRandomPrepare, S<Signal_HostAction>, sTag, sShortITI>;
 using tLightOnly = Trial<Trial_LightOnly, sCalmDown, sLight, sTag, sMonitorLick, sFixedITI>;
 using tAudioOnly = Trial<Trial_AudioOnly, sCalmDown, sAudio, sTag, sMonitorLick, sFixedITI>;
 using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick, sFixedITI>;
@@ -208,4 +209,5 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_LightAir, false, tLightAir, N<30>>,
   Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
   //此会话要求主机端配置能根据串口指示显示高低频图像的HostAction
-  Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>>;
+  Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>,
+  Session<Session_RandomImage, false, tRandomImage, N<100>>>;

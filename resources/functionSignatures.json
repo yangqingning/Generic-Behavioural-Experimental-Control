@@ -137,6 +137,15 @@
 				"purpose": "周期变化的初始正弦相位弧度"
 			},
 			{
+				"name": "ColorRange",
+				"kind": "namevalue",
+				"type": [
+					"size=:,3",
+					"real"
+				],
+				"purpose": "周期性渐变的颜色梯度"
+			},
+			{
 				"name": "PixelsPerCycle",
 				"kind": "namevalue",
 				"type": [

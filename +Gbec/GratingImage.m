@@ -10,6 +10,7 @@ classdef GratingImage<Gbec.IHostAction
 		Timer timer
 		Width single
 		Height single
+		Logger MATLAB.DataTypes.EventLogger
 	end
 	properties(Access=protected)
 		CurrentImage
@@ -39,7 +40,7 @@ classdef GratingImage<Gbec.IHostAction
 		function obj = GratingImage(options)
 			arguments
 				options.AngleRange=0
-				options.DurationRange=1
+				options.DurationRange=Inf
 				options.InitialPhase=0
 				options.PixelsPerCycle
 				options.CyclesPerWidth
@@ -61,9 +62,14 @@ classdef GratingImage<Gbec.IHostAction
 			obj.DurationRange=options.DurationRange;
 			obj.InitialPhase=options.InitialPhase;
 			obj.ColorRange=options.ColorRange;
-			Field=["PixelsPerCycle","CyclesPerWidth","CyclesPerHeight"];
-			Field=Field(isfield(options,Field));
-			obj.(Field)=options.(Field);
+			Fields=["PixelsPerCycle","CyclesPerWidth","CyclesPerHeight"];
+			Field=Fields(isfield(options,Fields));
+			if isscalar(Field)
+				obj.(Field)=options.(Field);
+			else
+				Gbec.GbecException.Grating_properties_invalid.Throw(sprintf('必须指定 %s 之一',join(Fields,' ')));
+			end
+			obj.Logger=MATLAB.DataTypes.EventLogger;
 		end
 	end
 	methods(Static)
@@ -82,7 +88,7 @@ classdef GratingImage<Gbec.IHostAction
 			%  - (1,2)，表示该参数以行向量中的两个元素为上下界，在此范围内随机抽一个取值
 			% 以下三个参数，如不指定将取默认值：
 			%  - AngleRange=0，顺时针旋转弧度。0表示在水平方向上周期变化，竖直方向上不变的栅格图。
-			%  - DurationRange=1，图像呈现的秒数。
+			%  - DurationRange=Inf，图像呈现的秒数。
 			%  - InitialPhase=0，周期变化的初始正弦相位弧度，例如pi/2表示从峰值开始
 			%  - ColorRange(:,3)uint8=[0,0,0;255,255,255]，周期性渐变的颜色梯度，第1维是不同的颜色，第2维RGB。首行是正弦周期的谷值点的颜色，末行是峰值点颜色，中间其'
 			%   它颜色线性插值。
@@ -126,28 +132,35 @@ classdef GratingImage<Gbec.IHostAction
 			obj.Reciprocal=false;
 			obj.CircularFrequency=sort((2*pi*CH)/obj.Height);
 		end
-		function Info=Run(obj,~,~)
-			%Arduino发来HostAction信号时，执行此方法
+		function Info=Test(obj)
 			CF=GetValue(obj.CircularFrequency);
 			if obj.Reciprocal
 				CF=1/CF;
 			end
 			Angle=GetValue(obj.AngleRange);
 			Duration=GetValue(obj.DurationRange);
-			obj.Timer.StartDelay=Duration;
 			IP=GetValue(obj.InitialPhase);
 			Image=permute(uint8(interp1(linspace(-1,1,height(obj.ColorRange)),single(obj.ColorRange),sin(((1:obj.Width)'*cos(Angle)+(1:obj.Height)*sin(Angle))*CF+IP))),[3,1,2]);
 			Image(4,:,:)=255;
 			obj.CurrentImage=obj.Window.Image(Image);
-			obj.Timer.start;
-			Info=struct(CircularFrequency=CF,Angle=Angle,Duration=Duration,InitialPhase=IP,Image=Image) %不加分号，输出Info
+			if ~isinf(Duration)
+				obj.Timer.StartDelay=Duration;
+				obj.Timer.start;
+			end
+			Info=struct(CircularFrequency=CF,Angle=Angle,Duration=Duration,InitialPhase=IP,Image=Image);
+		end
+		function Run(obj,~,~)
+			%Arduino发来HostAction信号时，执行此方法
+			obj.Logger.LogEvent(obj.Test);
 		end
 		function Information=GetInformation(obj)
 			%会话结束后，通过此方法获取信息
-			Information=struct(Width=obj.Width,Height=obj.Height,PixelsPerCycle=obj.PixelsPerCycle,AngleRange=obj.AngleRange,DurationRange=obj.DurationRange,InitialPhase=obj.InitialPhase,ColorRange=obj.ColorRange);
+			Events=obj.Logger.GetTimeTable;
+			Information=struct(Width=obj.Width,Height=obj.Height,PixelsPerCycle=obj.PixelsPerCycle,AngleRange=obj.AngleRange,DurationRange=obj.DurationRange,InitialPhase=obj.InitialPhase,ColorRange=obj.ColorRange,Events=[timetable(Events.Time),struct2table(Events.Event,AsArray=true)]);
 		end
 		function delete(obj)
 			delete(obj.Timer);
+			delete(obj.Window);
 		end
 	end
 end
