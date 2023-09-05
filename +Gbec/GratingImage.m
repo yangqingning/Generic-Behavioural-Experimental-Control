@@ -39,7 +39,7 @@ classdef GratingImage<Gbec.IHostAction
 	methods(Access=protected)
 		function obj = GratingImage(options)
 			arguments
-				options.AngleRange=0
+				options.AngleRange=[-pi/2,pi/2]
 				options.DurationRange=Inf
 				options.InitialPhase=0
 				options.PixelsPerCycle
@@ -87,7 +87,7 @@ classdef GratingImage<Gbec.IHostAction
 			%  - (:,1)，表示该参数每次在列向量中随机抽一个元素作为取值
 			%  - (1,2)，表示该参数以行向量中的两个元素为上下界，在此范围内随机抽一个取值
 			% 以下三个参数，如不指定将取默认值：
-			%  - AngleRange=0，顺时针旋转弧度。0表示在水平方向上周期变化，竖直方向上不变的栅格图。
+			%  - AngleRange=[-pi/2,pi/2]，顺时针旋转弧度。0表示在水平方向上周期变化，竖直方向上不变的栅格图。
 			%  - DurationRange=Inf，图像呈现的秒数。
 			%  - InitialPhase=0，周期变化的初始正弦相位弧度，例如pi/2表示从峰值开始
 			%  - ColorRange(:,3)uint8=[0,0,0;255,255,255]，周期性渐变的颜色梯度，第1维是不同的颜色，第2维RGB。首行是正弦周期的谷值点的颜色，末行是峰值点颜色，中间其'
