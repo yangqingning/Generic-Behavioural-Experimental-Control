@@ -28,5 +28,6 @@ classdef GbecException<MATLAB.Lang.IEnumerableException
 		Unsupported_NET_environment_please_restart_MATLAB
 		Arduino_requires_undefined_HostAction
 		Grating_properties_invalid
+		No_right_to_write_SavePath
 	end
 end
