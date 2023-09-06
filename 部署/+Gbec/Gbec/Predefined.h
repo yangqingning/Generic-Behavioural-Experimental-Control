@@ -410,6 +410,7 @@ struct ToneStep : public IStep {
     if (!IsNS<UpReporter>)
       Report<UpReporter>();
     TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, Milliseconds, IsNS<DownReporter> ? nullptr : Report<DownReporter>>();
+    return false;
   }
   void Setup() const override {
     if (NeedSetup<Pin>) {
