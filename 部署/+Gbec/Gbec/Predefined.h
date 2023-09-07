@@ -30,18 +30,44 @@ void TraverseCallback() {
 }
 template<uint8_t Pin>
 constexpr uint8_t Interrupt = digitalPinToInterrupt(Pin);
+template<uint8_t Pin>
+constexpr uint8_t INTF;
+#ifdef __AVR_ATmega2560__
+template<>
+constexpr uint8_t INTF<2> = INTF4;
+template<>
+constexpr uint8_t INTF<3> = INTF5;
+template<>
+constexpr uint8_t INTF<21> = INTF0;
+template<>
+constexpr uint8_t INTF<20> = INTF1;
+template<>
+constexpr uint8_t INTF<19> = INTF2;
+template<>
+constexpr uint8_t INTF<18> = INTF3;
+#endif
+#ifdef __AVR_ATmega328P__
+template<>
+constexpr uint8_t INTF<2> = INTF0;
+template<>
+constexpr uint8_t INTF<3> = INTF1;
+#endif
 // 如果试图添加重复的中断回调，则不会添加，也不会出错
 template<uint8_t Pin>
 void RisingInterrupt(void (*Callback)()) {
   static_assert(PinInterruptable(Pin));
-  if (CallbackList<Pin>.empty())
+  if (CallbackList<Pin>.empty()) {
+    //清除attachInterrupt之前已经立起并被记住的中断旗帜。中断旗帜与引脚号的对应关系与digitalPinToInterrupt不同。
+    EIFR = 1 << INTF<Pin>;
     attachInterrupt(Interrupt<Pin>, TraverseCallback<Pin>, RISING);
+  }
   CallbackList<Pin>.insert(Callback);
 }
 template<uint8_t Pin>
 void DetachInterrupt(void (*Callback)()) {
   CallbackList<Pin>.erase(Callback);
   if (CallbackList<Pin>.empty())
+    //detachInterrupt不能阻止后续中断旗帜再被立起
     detachInterrupt(Interrupt<Pin>);
 }
 struct ITest {
@@ -427,6 +453,7 @@ struct SquareWaveStep : public IStep {
     if (!IsNS<UpReporter>)
       Report<UpReporter>();
     TimersOneForAll::SquareWave<TimerCode, Pin, HighMilliseconds, LowMilliseconds, NumCycles, IsNS<DownReporter> ? nullptr : Report<DownReporter>>();
+    return false;
   }
   void Setup() const override {
     if (NeedSetup<Pin>) {
