@@ -29,9 +29,9 @@ classdef ExperimentWorker<handle
 		DesignedNumTrials
 		%提醒检查回合周期
 		CheckCycle=30
-		%主机动作，用于执行Arduino无法执行的主机任务，例如在屏幕上显示图像。
+		%主机动作，必须继承Gbec.IHostAction，用于执行Arduino无法执行的主机任务，例如在屏幕上显示图像。
 		%See also Gbec.IHostAction
-		HostAction Gbec.IHostAction
+		HostAction
 	end
 	properties(Access=protected)
 		Serial internal.Serialport

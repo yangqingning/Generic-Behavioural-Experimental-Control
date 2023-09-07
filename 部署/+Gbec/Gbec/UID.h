@@ -110,6 +110,7 @@ enum UID : uint8_t {
   Signal_LFImage,
   Signal_HFImage,
   Signal_Laser,
+  Signal_Image,
 
   // 测试UID
 

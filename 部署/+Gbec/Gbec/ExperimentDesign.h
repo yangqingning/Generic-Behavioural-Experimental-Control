@@ -182,7 +182,7 @@ Step1,Step2,…，依次排列要在该回合内执行的步骤
 
 using tLFImage = Trial<Trial_LFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_LFImage>, sTag, sShortITI>;
 using tHFImage = Trial<Trial_HFImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_HFImage>, sTag, sShortITI>;
-using tRandomImage = Trial<Trial_RandomImage, sRandomPrepare, S<Signal_HostAction>, sTag, sShortITI>;
+using tRandomImage = Trial<Trial_RandomImage, sRandomPrepare, S<Signal_HostAction>, S<Signal_Image>, sTag, sShortITI>;
 using tLightOnly = Trial<Trial_LightOnly, sCalmDown, sLight, sTag, sMonitorLick, sFixedITI>;
 using tAudioOnly = Trial<Trial_AudioOnly, sCalmDown, sAudio, sTag, sMonitorLick, sFixedITI>;
 using tWaterOnly = Trial<Trial_WaterOnly, sCalmDown, sWater, sTag, sMonitorLick, sFixedITI>;
