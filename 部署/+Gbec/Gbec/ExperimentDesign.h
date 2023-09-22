@@ -25,23 +25,44 @@ void PinSetup() {
 const auto &TestMap = TestMap_t<
   /*设备测试，在下方列出要运行的测试，逗号分隔。
 
-	  测试有两种类型：PinFlashTest和MonitorTest。
+	  测试可选如下类型：
 
-	  PinFlashTest<MyUID,Pin,TimerCode,Milliseconds,HighOrLow = HIGH>
+	  PinFlashTest<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, bool HighOrLow = HIGH>
 	  此测试运行时，将把指定引脚设为高或低电平，在指定毫秒数后反转。
 	  参数：
-	  MyUID，唯一标识此测试的UID
+	  TMyUID，唯一标识此测试的UID
 	  Pin，要测试的设备引脚
 	  TimerCode，要使用的计时器。请勿在上一测试未结束时，运行与其共享同一个计时器的下一个测试。
 	  Milliseconds，单次测试中，电平维持的毫秒数
 	  HighOrLow，要设为高电平还是低电平，可选HIGH或LOW
 
-	  MonitorTest<MyUID,Pin>
+	  MonitorTest<UID TMyUID, uint8_t Pin>
 	  此测试运行时，每次指定引脚从低电平变成高电平，将向串口发出Signal_MonitorHit信号。
 	  参数：
-	  MyUID，唯一标识此测试的UID
+	  TMyUID，唯一标识此测试的UID
 	  Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
-	  */
+
+    SquareWaveTest<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t NumCycles>
+    此测试运行时，在指定引脚上播放方波
+    参数：
+    TMyUID，唯一标识此测试的UID
+	  Pin，要测试的设备引脚
+	  TimerCode，要使用的计时器。请勿在上一测试未结束时，运行与其共享同一个计时器的下一个测试。
+    HighMilliseconds，一个方波周期的高电平毫秒数
+    LowMilliseconds，一个方波周期的低电平毫秒数
+    NumCycles，方波循环次数
+
+    RandomFlashTest<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax>
+    此测试运行时，在指定引脚上随机闪烁一段时间，具有预设的固定高电平和低电平总毫秒数，在指定随机范围内穿插高低电平。
+    参数：
+    TMyUID，唯一标识此测试的UID
+	  Pin，要测试的设备引脚
+	  TimerCode，要使用的计时器。请勿在上一测试未结束时，运行与其共享同一个计时器的下一个测试。
+    HighMilliseconds，高电平总毫秒数
+    LowMilliseconds，低电平总毫秒数
+    RandomCycleMin，一个随机高低电平周期的最短毫秒数
+    RandomCycleMax，一个随机高低电平周期的最长毫秒数
+	*/
   PinFlashTest<Test_CD1, pCD1, 0, 200>,
   PinFlashTest<Test_BlueLed, pBlueLed, 3, 200>,
   PinFlashTest<Test_ActiveBuzzer, pActiveBuzzer, 4, 200>,
@@ -49,7 +70,8 @@ const auto &TestMap = TestMap_t<
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
   PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
   MonitorTest<Test_CapacitorMonitor, pCapacitorOut>,
-  SquareWaveTest<Test_SquareWave, pLaser, 3, 30, 30, 30>>;
+  SquareWaveTest<Test_SquareWave, pLaser, 3, 30, 30, 30>,
+  RandomFlashTest<Test_RandomFlash, pLaser, 3, 4000, 8000, 300, 3000>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
@@ -64,7 +86,7 @@ using S = SerialWriteStep<Signal>;
 /*冷静类步骤
 
 在指定范围内随机抽取一个毫秒数，然后在该毫秒数的时间内监视指定引脚。如果时间内出现高电平，将重新开始计时，直到在某次重置计时时间内未出现任何一次高电平，才能结束该步骤，进入下一步。语法：
-using StepName=CalmdownStep<Pin,TimerCode,MinMilliseconds,MaxMilliseconds=MinMilliseconds,MyUID=Step_Calmdown>;
+using StepName = CalmdownStep<uint8_t Pin, uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds = MinMilliseconds, UID MyUID = Step_Calmdown>;
 
 参数：
 Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
@@ -79,7 +101,7 @@ using sCalmDown = CalmdownStep<pCapacitorOut, 1, 5000, 10000>;
 /*引脚闪烁类步骤
 
 让引脚高电平指定毫秒数，再回到低电平。此类步骤异步执行，一开始就立即结束进入下一步，而不会等待引脚回到低电平，不占用主时间轴。语法：
-using StepName=PinFlashStep<Pin,TimerCode,Milliseconds,UpReporter=NullStep,DownReporter=NullStep,MyUID=Step_PinFlash>;
+using StepName = PinFlashStep<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_PinFlash>;
 
 参数：
 Pin，要闪烁的引脚
@@ -99,7 +121,7 @@ using sSquareWave = SquareWaveStep<pLaser, 3, 30, 30, 30, S<Signal_Laser>, NullS
 /*监视类步骤
 
 在指定毫秒数内监视指定引脚。如果发现高电平，汇报命中。还可用扩展旗帜指定增强功能。语法：
-using StepName=MonitorStep<Pin,TimerCode,Milliseconds,Flags,HitReporter,MissReporter=NullStep,MyUID=Step_Monitor>;
+using StepName = MonitorStep<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, uint8_t Flags, typename HitReporter, typename MissReporter = NullStep, UID MyUID = Step_Monitor>;
 
 参数：
 Pin，要监视的引脚。注意，只能监视支持中断的引脚，包括2, 3, 18, 19, 20, 21
@@ -122,7 +144,7 @@ using sResponseWindow = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, 
 /*等待类步骤
 
 在指定范围内随机抽取一个毫秒数，静默等待那个毫秒数的时间，然后结束步骤。语法：
-using StepName=WaitStep<TimerCode,MinMilliseconds,MaxMilliseconds=MinMilliseconds,MyUID=Step_Wait>;
+using StepName = WaitStep<uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds = MinMilliseconds, UID MyUID = Step_Wait>;
 
 参数：
 TimerCode，要使用的计时器
@@ -141,8 +163,8 @@ using sRandomPrepare = WaitStep<2, 0, 10000>;
 /*后台监视类步骤
 
 类似于监视类步骤，但不占用主时间轴，而是在后台持续监视，不断汇报每次命中。此类包含一个开始步骤和一个终止步骤，都是立即结束，不占用主时间轴。语法：
-using StepName=StartMonitorStep<Pin,Reporter,MyUID=Step_StartMonitor>;
-using StepName=StopMonitorStep<Pin,Reporter,MyUID=Step_StopMonitor>;
+using StepName = StartMonitorStep<uint8_t Pin, typename Reporter, UID MyUID = Step_StartMonitor>;
+using StepName = <uint8_t Pin, typename Reporter, UID MyUID = Step_StopMonitor>;
 开始和终止步骤的Pin和Reporter参数必须相同，配对出现。开始步骤后即开始在后台持续监视，后续其它步骤继续正常执行，直到配对的终止步骤后才结束监视。
 
 参数：
@@ -157,7 +179,7 @@ using sStopMonitor = StopMonitorStep<pCapacitorOut, S<Signal_HitCount>>;
 /*音调类步骤
 
 此步骤在指定引脚上播放指定频率的音调。此类步骤异步执行，一开始就立即结束进入下一步，而不会等待播放结束，不占用主时间轴。语法：
-using StepName=ToneStep<Pin,TimerCode,FrequencyHz,Milliseconds,UpReporter=NullStep,DownReporter=NullStep,MyUID=Step_Audio>;
+using StepName = ToneStep<uint8_t Pin, uint8_t TimerCode, uint16_t FrequencyHz, uint16_t Milliseconds, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_Audio>;
 
 参数：
 Pin，要播放的引脚
@@ -169,6 +191,38 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 
 using sLowTone = ToneStep<pPassiveBuzzer, 3, 500, 200, S<Signal_LowUp>, S<Signal_LowDown>, Step_LowTone>;
 using sHighTone = ToneStep<pPassiveBuzzer, 3, 5000, 200, S<Signal_HighUp>, S<Signal_LowDown>, Step_HighTone>;
+
+/*精确记录类步骤
+
+此步骤需要独占一个全程计时器，不能被同会话的任何其它步骤使用。使用此步骤向PC端发送一条UID日志，同时发送从实验开始起经过的精确毫秒数。这个计时方法规避了串口通讯的延迟问题。但是，如果中途发生断线重连，重连后的计时将与重连前存在一定的偏差，因为重连过程不可避免要等待串口通讯。
+using StepName = PreciseLogStep<uint8_t TimerCode, UID Event, UID MyUID = Step_PreciseLog>;
+
+参数：
+TimerCode，要使用的计时器。此计时器将在整个会话中持续工作，因此不允许同一个会话中有PreciseLogStep以外的步骤使用此计时器。不同会话中的步骤不受影响。所有的PreciseLogStep都可以共享一个计时器。
+Event，要记录的事件UID
+MyUID，标识该步骤的UID，在返回信息时供人类识别
+*/
+
+using sLog = PreciseLogStep<5, Signal_Laser>;
+
+/*随机闪烁类步骤
+
+此步骤在指定引脚上产生随机的高低电平闪烁。需要指定高低电平各自的总时长，以及每个闪烁周期的随机范围。
+using StepName = RandomFlashStep<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax, typename UpReporter = NullStep, typename DownReporter = NullStep, bool ReportEachCycle = false, UID MyUID = Step_RandomFlash>
+
+参数：
+Pin，要闪烁的引脚
+TimerCode，要使用的计时器
+HighMilliseconds，高电平总毫秒数
+LowMilliseconds，低电平总毫秒数
+RandomCycleMin，一个随机高低电平周期的最短毫秒数
+RandomCycleMax，一个随机高低电平周期的最长毫秒数
+UpReporter,DownReporter，提醒闪烁开始和结束的汇报器。
+ReportEachCycle，是否每个循环都触发汇报器。若true，则每次高电平前触发UpReporter，每次高电平后触发DownReporter；若false，只有第一次高电平前触发UpReporter，最后一次高电平后触发DownReporter。
+MyUID，标识该步骤的UID，在返回信息时供人类识别
+*/
+
+using sRandomFlash = RandomFlashStep<pLaser, 3, 4000, 8000, 300, 3000>;
 
 /*回合设计。
 一个回合由多个步骤串联而成。语法：

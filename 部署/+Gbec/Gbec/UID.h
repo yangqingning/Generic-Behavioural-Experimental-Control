@@ -64,6 +64,9 @@ enum UID : uint8_t {
   Info_HighMilliseconds,
   Info_LowMilliseconds,
   Info_NumCycles,
+  Info_RandomCycleMin,
+  Info_RandomCycleMax,
+  Info_Event,
 
   //状态
 
@@ -111,6 +114,7 @@ enum UID : uint8_t {
   Signal_HFImage,
   Signal_Laser,
   Signal_Image,
+  Signal_PreciseLog,
 
   // 测试UID
 
@@ -124,6 +128,7 @@ enum UID : uint8_t {
   Test_CapacitorReset,
   Test_CapacitorMonitor,
   Test_SquareWave,
+  Test_RandomFlash,
 
   // 步骤UID
 
@@ -146,6 +151,8 @@ enum UID : uint8_t {
   Step_HighTone,
   Step_Air,
   Step_SquareWave,
+  Step_RandomFlash,
+  Step_PreciseLog,
 
   // 回合UID
 

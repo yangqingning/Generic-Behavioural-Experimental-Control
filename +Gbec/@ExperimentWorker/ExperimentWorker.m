@@ -6,7 +6,7 @@ classdef ExperimentWorker<handle
 		%实验记录保存路径
 		SavePath(1,1)string
 		%实验结束后是否保存记录
-		SaveFile(1,1)logical
+		SaveFile(1,1)logical=true
 		%喵提醒码
 		MiaoCode(1,1)string=""
 		%喵提醒重试次数
@@ -32,6 +32,8 @@ classdef ExperimentWorker<handle
 		%主机动作，必须继承Gbec.IHostAction，用于执行Arduino无法执行的主机任务，例如在屏幕上显示图像。
 		%See also Gbec.IHostAction
 		HostAction
+		%将要合并的旧数据路径
+		MergeData=missing
 	end
 	properties(Access=protected)
 		Serial internal.Serialport
@@ -39,10 +41,13 @@ classdef ExperimentWorker<handle
 		%没有对象无法初始化
 		WatchDog
 		SignalHandler
+		TIC
+		TimeOffset
 	end
 	properties(GetAccess=protected,SetAccess=immutable)
 		EventRecorder MATLAB.DataTypes.EventLogger
 		TrialRecorder MATLAB.DataTypes.EventLogger
+		PreciseRecorder MATLAB.Containers.Vector
 	end
 	properties(Dependent)
 		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
@@ -59,7 +64,12 @@ classdef ExperimentWorker<handle
 				if questdlg('是否保存现有数据？','实验已放弃','确定','取消','确定')~="取消"
 					obj.SaveInformation;
 				else
-					delete(obj.SavePath);
+					if isequaln(obj.MergeData,missing)
+						[Directory,Filename]=fileparts(obj.SavePath);
+						movefile(fullfile(Directory,Filename+".将合并.mat"),obj.SavePath,'f');
+					else
+						delete(obj.SavePath);
+					end
 				end
 			else
 				warning("数据未保存");
@@ -102,6 +112,11 @@ classdef ExperimentWorker<handle
 			DistinctTrials=unique(TrialsDone);
 			NumTrials=countcats(categorical(TrialsDone));
 			obj.ApiCall(Gbec.UID.API_Restore);
+			if isempty(obj.TIC)
+				obj.Serial.write(0,'uint32');
+			else
+				obj.Serial.write(toc(obj.TIC)*1000+obj.TimeOffset,'uint32');
+			end
 			obj.Serial.write(obj.SessionUID,"uint8");
 			NDT=numel(DistinctTrials);
 			obj.Serial.write(NDT,'uint8');
@@ -147,6 +162,7 @@ classdef ExperimentWorker<handle
 			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
+			obj.PreciseRecorder=MATLAB.Containers.Vector;
 		end
 	end
 	methods(Static)

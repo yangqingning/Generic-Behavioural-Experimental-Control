@@ -8,29 +8,6 @@
 #include <type_traits>
 #include <TimersOneForAll.h>
 template<uint8_t Pin>
-bool NeedSetup = true;
-template<typename T>
-bool _NeedSetup = true;
-constexpr bool PinInterruptable(uint8_t Pin) {
-  constexpr uint8_t Interruptables[] = { 2, 3, 18, 19, 20, 21 };
-  bool Found = false;
-  for (uint8_t P : Interruptables)
-    if (P == Pin) {
-      Found = true;
-      break;
-    }
-  return Found;
-}
-template<uint8_t Pin>
-std::set<void (*)()> CallbackList;
-template<uint8_t Pin>
-void TraverseCallback() {
-  for (void (*const C)() : CallbackList<Pin>)
-    C();
-}
-template<uint8_t Pin>
-constexpr uint8_t Interrupt = digitalPinToInterrupt(Pin);
-template<uint8_t Pin>
 constexpr uint8_t INTF;
 #ifdef __AVR_ATmega2560__
 template<>
@@ -52,29 +29,55 @@ constexpr uint8_t INTF<2> = INTF0;
 template<>
 constexpr uint8_t INTF<3> = INTF1;
 #endif
-// 如果试图添加重复的中断回调，则不会添加，也不会出错
 template<uint8_t Pin>
+std::set<void (*)()> CallbackSet;
+constexpr bool PinInterruptable(uint8_t Pin) {
+  constexpr uint8_t Interruptables[] = { 2, 3, 18, 19, 20, 21 };
+  bool Found = false;
+  for (uint8_t P : Interruptables)
+    if (P == Pin) {
+      Found = true;
+      break;
+    }
+  return Found;
+}
+template<uint8_t Pin>
+void TraverseCallback() {
+  for (void (*const C)() : CallbackSet<Pin>)
+    C();
+}
+template<uint8_t Pin>
+bool NeedSetup;
+template<uint8_t Pin>
+// 如果试图添加重复的中断回调，则不会添加，也不会出错
 void RisingInterrupt(void (*Callback)()) {
-  static_assert(PinInterruptable(Pin));
-  if (CallbackList<Pin>.empty()) {
-    //清除attachInterrupt之前已经立起并被记住的中断旗帜。中断旗帜与引脚号的对应关系与digitalPinToInterrupt不同。
+  if (CallbackSet<Pin>.empty()) {
+    // 清除attachInterrupt之前已经立起并被记住的中断旗帜。中断旗帜与引脚号的对应关系与digitalPinToInterrupt不同。
     EIFR = 1 << INTF<Pin>;
-    attachInterrupt(Interrupt<Pin>, TraverseCallback<Pin>, RISING);
+    attachInterrupt(digitalPinToInterrupt(Pin), TraverseCallback<Pin>, RISING);
   }
-  CallbackList<Pin>.insert(Callback);
+  CallbackSet<Pin>.insert(Callback);
 }
 template<uint8_t Pin>
 void DetachInterrupt(void (*Callback)()) {
-  CallbackList<Pin>.erase(Callback);
-  if (CallbackList<Pin>.empty())
-    //detachInterrupt不能阻止后续中断旗帜再被立起
-    detachInterrupt(Interrupt<Pin>);
+  CallbackSet<Pin>.erase(Callback);
+  if (CallbackSet<Pin>.empty())
+    // detachInterrupt不能阻止后续中断旗帜再被立起
+    detachInterrupt(digitalPinToInterrupt(Pin));
 }
+template<uint8_t TimerCode>
+uint16_t RandomCycle;
+template<uint8_t TimerCode>
+uint16_t Milliseconds;
+template<uint8_t TimerCode>
+void (*FinishCallback)();
+template<uint8_t TimerCode>
+bool NoHits;
 struct ITest {
   UID MyUID;
   // 测试开始时将调用此方法。测试分为自动结束型和手动结束型。对于自动结束型，应当根据TestTimes参数将测试重复指定的次数，并返回true表示该测试将自动结束。对于手动结束型，一般应当忽略TestTimes参数，返回false，持续测试直到Stop被调用。
   virtual bool Start(uint16_t TestTimes) const = 0;
-  //测试被用户手动结束时将调用此方法。自动结束型测试无需实现此方法，手动结束型则必须实现。
+  // 测试被用户手动结束时将调用此方法。自动结束型测试无需实现此方法，手动结束型则必须实现。
   virtual void Stop() const {}
   constexpr ITest(UID MyUID)
     : MyUID(MyUID) {}
@@ -94,8 +97,45 @@ struct PinFlashTest : public ITest {
     return true;
   }
 };
+template<uint16_t Min, uint16_t Max, uint8_t TimerCode>
+inline void SetRandomCycle() {
+  RandomCycle<TimerCode> = random(Min, Max + 1);
+  if (RandomCycle<TimerCode> + Min > Milliseconds<TimerCode>)
+    RandomCycle<TimerCode> = RandomCycle<TimerCode> < Milliseconds<TimerCode> ? (Max < Milliseconds<TimerCode> ? Milliseconds<TimerCode> - Min : (RandomCycle<TimerCode> < Milliseconds<TimerCode> + Milliseconds<TimerCode> - Min ? Milliseconds<TimerCode> - Min : Milliseconds<TimerCode>)) : Milliseconds<TimerCode>;
+  Milliseconds<TimerCode> -= RandomCycle<TimerCode>;
+}
+// 给引脚一段时间的高或低电平，然后反转
+template<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax>
+struct RandomFlashTest : public ITest {
+  constexpr RandomFlashTest()
+    : ITest(TMyUID) {}
+  static constexpr float FullMilliseconds = HighMilliseconds + LowMilliseconds;
+  static constexpr float HighRatio = HighMilliseconds / FullMilliseconds;
+  static constexpr float LowRatio = LowMilliseconds / FullMilliseconds;
+  bool Start(uint16_t TestTimes) const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+    if (HighMilliseconds) {
+      Milliseconds<TimerCode> = FullMilliseconds * TestTimes;
+      SetHigh();
+    }
+    return true;
+  }
+protected:
+  static void SetHigh() {
+    DigitalWrite<Pin, HIGH>();
+    SetRandomCycle<RandomCycleMin, RandomCycleMax, TimerCode>();
+    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * HighRatio, Milliseconds<TimerCode> ? SetLow : DigitalWrite<Pin, LOW>);
+  }
+  static void SetLow() {
+    DigitalWrite<Pin, LOW>();
+    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * LowRatio, SetHigh);
+  }
+};
 // 监视引脚，每次高电平发送串口报告。此测试需要调用Stop才能终止，且无视TestTimes参数
-template<UID TMyUID, uint8_t ReadPin>
+template<UID TMyUID, uint8_t Pin>
 class MonitorTest : public ITest {
   static void ReportHit() {
     SerialWrite(Signal_MonitorHit);
@@ -105,11 +145,16 @@ public:
   constexpr MonitorTest()
     : ITest(TMyUID) {}
   bool Start(uint16_t) const override {
-    RisingInterrupt<ReadPin>(ReportHit);
+    static_assert(PinInterruptable(Pin), "试图将不支持的引脚用于MonitorTest");
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, INPUT);
+      NeedSetup<Pin> = false;
+    }
+    RisingInterrupt<Pin>(ReportHit);
     return false;
   }
   void Stop() const override {
-    DetachInterrupt<ReadPin>(ReportHit);
+    DetachInterrupt<Pin>(ReportHit);
   }
 };
 // 测试具有指定高电平和低电平毫秒数和循环次数的方波
@@ -225,25 +270,23 @@ using NullStep = IStep;
 // 持续等待，直到指定引脚在指定连续毫秒数内都保持静默才结束
 template<uint8_t Pin, uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds = MinMilliseconds, UID MyUID = Step_Calmdown>
 class CalmdownStep : public IStep {
-  static uint16_t Milliseconds;
-  static void (*FinishCallback)();
   static constexpr bool RandomTime = MinMilliseconds < MaxMilliseconds;
   static void Reset() {
     if (RandomTime)
-      TimersOneForAll::DoAfter<TimerCode>(Milliseconds, TimeUp);
+      TimersOneForAll::DoAfter<TimerCode>(Milliseconds<TimerCode>, TimeUp);
     else
       TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(TimeUp);
   }
   static void TimeUp() {
     DetachInterrupt<Pin>(Reset);
-    FinishCallback();
+    FinishCallback<TimerCode>();
   }
 
 public:
   bool Start(void (*FC)()) const override {
-    FinishCallback = FC;
+    FinishCallback<TimerCode> = FC;
     if (RandomTime)
-      TimersOneForAll::DoAfter<TimerCode>(Milliseconds = random(MinMilliseconds, MaxMilliseconds + 1), TimeUp);
+      TimersOneForAll::DoAfter<TimerCode>(Milliseconds<TimerCode> = random(MinMilliseconds, MaxMilliseconds + 1), TimeUp);
     else
       TimersOneForAll::DoAfter<TimerCode, MinMilliseconds>(TimeUp);
     RisingInterrupt<Pin>(Reset);
@@ -270,28 +313,21 @@ public:
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_MinMilliseconds, MinMilliseconds, Info_MaxMilliseconds, MaxMilliseconds);
 };
-template<uint8_t Pin, uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds, UID MyUID>
-uint16_t CalmdownStep<Pin, TimerCode, MinMilliseconds, MaxMilliseconds, MyUID>::Milliseconds;
-template<uint8_t Pin, uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds, UID MyUID>
-void (*CalmdownStep<Pin, TimerCode, MinMilliseconds, MaxMilliseconds, MyUID>::FinishCallback)();
 template<typename Reporter>
 inline void Report() {
   Instance<Reporter>.Start([]() {});
 }
-template<typename T>
-constexpr bool IsNS = std::is_same_v<T, NullStep>;
 // 让引脚高电平一段时间再回到低电平。异步执行，不阻塞时相
 template<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_PinFlash>
 class PinFlashStep : public IStep {
   static void DownReport() {
     DigitalWrite<Pin, LOW>();
-    if (!IsNS<DownReporter>)
-      Report<DownReporter>();
+    Report<DownReporter>();
   }
+
 public:
   bool Start(void (*FC)()) const override {
-    if (!IsNS<UpReporter>)
-      Report<UpReporter>();
+    Report<UpReporter>();
     DigitalWrite<Pin, HIGH>();
     TimersOneForAll::DoAfter<TimerCode, Milliseconds>(DownReport);
     return false;
@@ -301,42 +337,89 @@ public:
       pinMode(Pin, OUTPUT);
       NeedSetup<Pin> = false;
     }
+    Instance<UpReporter>.Setup();
+    Instance<DownReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_Milliseconds, Milliseconds);
+};
+// 在一段时间内随机闪烁引脚。指定高电平和低电平总时长，以及每次闪烁的随机范围。
+template<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax, typename UpReporter = NullStep, typename DownReporter = NullStep, bool ReportEachCycle = false, UID MyUID = Step_RandomFlash>
+class RandomFlashStep : public IStep {
+  static constexpr float FullMilliseconds = HighMilliseconds + LowMilliseconds;
+  static constexpr float HighRatio = HighMilliseconds / FullMilliseconds;
+  static constexpr float LowRatio = LowMilliseconds / FullMilliseconds;
+  static void SetEnd() {
+    Report<DownReporter>();
+    DigitalWrite<Pin, LOW>();
+  }
+  static void SetHigh() {
+    // 能进SetHigh必然有HighLeft，所以不用检查
+    if (ReportEachCycle)
+      Report<UpReporter>();
+    DigitalWrite<Pin, HIGH>();
+    SetRandomCycle<RandomCycleMin, RandomCycleMax, TimerCode>();
+    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * HighRatio, Milliseconds<TimerCode> ? SetLow : SetEnd);
+  }
+  static void SetLow() {
+    // 能进SetLow必然HighLeft和LowLeft兼有
+    if (ReportEachCycle)
+      Report<DownReporter>();
+    DigitalWrite<Pin, LOW>();
+    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * LowRatio, SetHigh);
+  }
+
+public:
+  bool Start(void (*FC)()) const override {
+    if (!ReportEachCycle)
+      Report<UpReporter>();
+    if (HighMilliseconds) {
+      Milliseconds<TimerCode> = FullMilliseconds;
+      SetHigh();
+    } else
+      Report<DownReporter>();
+    return false;
+  }
+  void Setup() const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+    Instance<UpReporter>.Setup();
+    Instance<DownReporter>.Setup();
+  }
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_HighMilliseconds, HighMilliseconds, Info_LowMilliseconds, LowMilliseconds, Info_RandomCycleMin, RandomCycleMin, Info_RandomCycleMax, RandomCycleMax);
 };
 // 在一段时间内同步监视引脚，发现高电平立即汇报。HitReporter和MissReporter都是IStep类型，一律异步执行，不等待
 template<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, uint8_t Flags, typename HitReporter, typename MissReporter = NullStep, UID MyUID = Step_Monitor>
 class MonitorStep : public IStep {
-  static void (*FinishCallback)();
-  static bool NoHits;
   static constexpr bool ReportOnce = Flags & Monitor_ReportOnce;
-  static constexpr bool ReportMiss = !IsNS<MissReporter>;
+  static constexpr bool ReportMiss = !std::is_same_v<MissReporter, NullStep>;
   static constexpr bool HitAndFinish = Flags & Monitor_HitAndFinish;
   static void HitReport() {
     Report<HitReporter>();
     if (HitAndFinish) {
       DetachInterrupt<Pin>(HitReport);
       TimersOneForAll::ShutDown<TimerCode>();
-      FinishCallback();
+      FinishCallback<TimerCode>();
     } else {
       if (ReportOnce)
         DetachInterrupt<Pin>(HitReport);
       if (ReportMiss)
-        NoHits = false;
+        NoHits<TimerCode> = false;
     }
   }
   static void TimeUp() {
     DetachInterrupt<Pin>(HitReport);
-    if (ReportMiss && NoHits)
+    if (ReportMiss && NoHits<TimerCode>)
       Report<MissReporter>();
-    FinishCallback();
+    FinishCallback<TimerCode>();
   }
 
 public:
   bool Start(void (*FC)()) const override {
-    FinishCallback = FC;
+    FinishCallback<TimerCode> = FC;
     if (ReportMiss)
-      NoHits = true;
+      NoHits<TimerCode> = true;
     RisingInterrupt<Pin>(HitReport);
     TimersOneForAll::DoAfter<TimerCode, Milliseconds>(TimeUp);
     return true;
@@ -359,6 +442,8 @@ public:
       pinMode(Pin, INPUT);
       NeedSetup<Pin> = false;
     }
+    Instance<HitReporter>.Setup();
+    Instance<MissReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(
     Info_UID, MyUID,
@@ -370,10 +455,6 @@ public:
     Info_HitReporter, HitReporter::Info,
     Info_MissReporter, MissReporter::Info);
 };
-template<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, uint8_t Flags, typename HitReporter, typename MissReporter, UID MyUID>
-void (*MonitorStep<Pin, TimerCode, Milliseconds, Flags, HitReporter, MissReporter, MyUID>::FinishCallback)();
-template<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, uint8_t Flags, typename HitReporter, typename MissReporter, UID MyUID>
-bool MonitorStep<Pin, TimerCode, Milliseconds, Flags, HitReporter, MissReporter, MyUID>::NoHits;
 // 不做任何事，同步等待一段时间后再进入下一步。
 template<uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds = MinMilliseconds, UID MyUID = Step_Wait>
 struct WaitStep : public IStep {
@@ -408,6 +489,7 @@ struct StartMonitorStep : public IStep {
       pinMode(Pin, INPUT);
       NeedSetup<Pin> = false;
     }
+    Instance<Reporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_Reporter, Reporter::Info);
 };
@@ -419,6 +501,7 @@ struct StopMonitorStep : public IStep {
     return false;
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_Reporter, Reporter::Info);
+  // 此类不需要Setup，初始化应由与其配对的StartMonitorStep负责
 };
 // 向串口写出一个字节
 template<UID ToWrite, UID MyUID = Step_SerialWrite>
@@ -429,13 +512,29 @@ struct SerialWriteStep : public IStep {
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_ToWrite, ToWrite);
 };
+// 以精确的毫秒数记录事件。注意，如果中途发生断线重连事件，事件前后的相对时间将不再精确。
+extern uint32_t TimeShift;
+template<uint8_t TimerCode, UID Event, UID MyUID = Step_PreciseLog>
+struct PreciseLogStep : public IStep {
+  void Setup() const override {
+    //必须每次Setup，否则无法重复使用。没有办法还原“已Setup”标志位。
+    TimersOneForAll::StartTiming<TimerCode>();
+    TimersOneForAll::MillisecondsElapsed<TimerCode> = TimeShift;
+  }
+  bool Start(void (*)()) const override {
+    SerialWrite(Signal_PreciseLog);
+    SerialWrite(Event);
+    SerialWrite(TimersOneForAll::MillisecondsElapsed<TimerCode>);
+    return false;
+  }
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Event, Event);
+};
 // 播放具有指定频率㎐和指定毫秒数的声音。异步执行，步骤不阻塞时相。
 template<uint8_t Pin, uint8_t TimerCode, uint16_t FrequencyHz, uint16_t Milliseconds, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_Audio>
 struct ToneStep : public IStep {
   bool Start(void (*)()) const override {
-    if (!IsNS<UpReporter>)
-      Report<UpReporter>();
-    TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, Milliseconds, IsNS<DownReporter> ? nullptr : Report<DownReporter>>();
+    Report<UpReporter>();
+    TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, Milliseconds, Report<DownReporter>>();
     return false;
   }
   void Setup() const override {
@@ -443,16 +542,17 @@ struct ToneStep : public IStep {
       pinMode(Pin, OUTPUT);
       NeedSetup<Pin> = false;
     }
+    Instance<UpReporter>.Setup();
+    Instance<DownReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_FrequencyHz, FrequencyHz, Info_Milliseconds, Milliseconds);
 };
-//播放具有指定高电平和低电平毫秒数的方波。异步执行，步骤不阻塞时相。
+// 播放具有指定高电平和低电平毫秒数的方波。异步执行，步骤不阻塞时相。
 template<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t NumCycles, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_SquareWave>
 struct SquareWaveStep : public IStep {
   bool Start(void (*)()) const override {
-    if (!IsNS<UpReporter>)
-      Report<UpReporter>();
-    TimersOneForAll::SquareWave<TimerCode, Pin, HighMilliseconds, LowMilliseconds, NumCycles, IsNS<DownReporter> ? nullptr : Report<DownReporter>>();
+    Report<UpReporter>();
+    TimersOneForAll::SquareWave<TimerCode, Pin, HighMilliseconds, LowMilliseconds, NumCycles, Report<DownReporter>>();
     return false;
   }
   void Setup() const override {
@@ -460,6 +560,8 @@ struct SquareWaveStep : public IStep {
       pinMode(Pin, OUTPUT);
       NeedSetup<Pin> = false;
     }
+    Instance<UpReporter>.Setup();
+    Instance<DownReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_HighMilliseconds, HighMilliseconds, Info_LowMilliseconds, LowMilliseconds, Info_NumCycles, NumCycles);
 };
@@ -503,6 +605,8 @@ public:
     Steps[StepsDone - 1]->Abort();
   }
 };
+template<typename T>
+bool _NeedSetup = true;
 template<UID TUID, typename... TSteps>
 bool &Trial<TUID, TSteps...>::NeedSetup = _NeedSetup<Trial<TUID, TSteps...>>;
 template<UID TUID, typename... TSteps>
@@ -536,16 +640,17 @@ struct Session : public ISession {
   constexpr static uint8_t NumDistinctTrials = std::extent_v<decltype(TNS::Numbers.Array)>;
   static void ArrangeTrials(const uint16_t *TrialsLeft) {
     TrialQueue.resize(std::accumulate(TrialsLeft, TrialsLeft + NumDistinctTrials, uint16_t(0)));
-    const ITrial **TQPointer = TrialQueue.data();
+    const ITrial **const TQStart = TrialQueue.data();
+    const ITrial **TQEnd = TQStart;
     for (uint8_t T = 0; T < NumDistinctTrials; ++T) {
       if (NeedSetup)
         TNS::Trials_t::Interfaces[T]->Setup();
-      std::fill_n(TQPointer, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
-      TQPointer += TrialsLeft[T];
+      std::fill_n(TQEnd, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
+      TQEnd += TrialsLeft[T];
     }
     NeedSetup = false;
     if (TRandom)
-      std::shuffle(TrialQueue.data(), TQPointer, Urng);
+      std::shuffle(TrialQueue.data(), TQStart, Urng);
     TrialsDone = 0;
   }
 

@@ -25,6 +25,7 @@ void Start() {
     Serial.write(Signal_NoSuchSession);
     return;
   }
+  TimeShift = 0;
   CurrentSession = (*Query).second;
   State = State_SessionRunning;
   Serial.write(Signal_SessionStarted);
@@ -79,17 +80,23 @@ void GetInfo() {
 void Restore() {
 #pragma pack(push, 1)
   struct RestoreCommand {
+    uint32_t TimeShift;
     UID SessionUID;
     uint8_t NumDistinctTrials;
   };
   const RestoreCommand RC = SerialRead<RestoreCommand>();
   const std::unique_ptr<RestoreInfo[]> RIs = std::make_unique<RestoreInfo[]>(RC.NumDistinctTrials);
   SerialRead(RIs.get(), RC.NumDistinctTrials);
-  if (State == State_SessionRunning || State == State_SessionPaused)
-    return State;
+  if (State == State_SessionRunning || State == State_SessionPaused) {
+    SerialWrite(State);
+    return;
+  }
   const auto Query = SessionMap.find(RC.SessionUID);
-  if (Query == SessionMap.end())
-    return Signal_NoSuchSession;
+  if (Query == SessionMap.end()) {
+    SerialWrite(Signal_NoSuchSession);
+    return;
+  }
+  TimeShift = RC.TimeShift;
   CurrentSession = (*Query).second;
   State = State_SessionRunning;
   Serial.write(Signal_SessionRestored);

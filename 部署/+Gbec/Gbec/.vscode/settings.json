@@ -2,6 +2,7 @@
 	"files.associations": {
 		"memory": "cpp",
 		"xtr1common": "cpp",
-		"random": "cpp"
+		"random": "cpp",
+		"vector": "cpp"
 	}
 }

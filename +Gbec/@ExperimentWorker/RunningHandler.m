@@ -49,6 +49,15 @@ switch Signal
 		else
 			obj.HostAction.Run(obj.Serial,obj.EventRecorder);
 		end
+	case UID.Signal_PreciseLog
+		Event=UID(obj.Serial.read(1,'uint8'));
+		Time=milliseconds(obj.Serial.read(1,'uint32'));
+		if isempty(obj.TIC)
+			obj.TIC=tic;
+		end
+		obj.TimeOffset=Time-toc(obj.TIC)*1000;
+		obj.PreciseRecorder.PushBack(struct(Time=Time,Event=Event));
+		fprintf('%s（%s）',Gbec.LogTranslate(Event),Time);
 	otherwise
 		%为了与TrialUID保持一致，这里也记录UID而不是字符串
 		obj.EventRecorder.LogEvent(UID(Signal));
