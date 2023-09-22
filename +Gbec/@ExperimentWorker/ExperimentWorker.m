@@ -65,10 +65,10 @@ classdef ExperimentWorker<handle
 					obj.SaveInformation;
 				else
 					if isequaln(obj.MergeData,missing)
+						delete(obj.SavePath);
+                    else
 						[Directory,Filename]=fileparts(obj.SavePath);
 						movefile(fullfile(Directory,Filename+".将合并.mat"),obj.SavePath,'f');
-					else
-						delete(obj.SavePath);
 					end
 				end
 			else
@@ -115,7 +115,7 @@ classdef ExperimentWorker<handle
 			if isempty(obj.TIC)
 				obj.Serial.write(0,'uint32');
 			else
-				obj.Serial.write(toc(obj.TIC)*1000+obj.TimeOffset,'uint32');
+				obj.Serial.write(milliseconds(seconds(toc(obj.TIC))+obj.TimeOffset),'uint32');
 			end
 			obj.Serial.write(obj.SessionUID,"uint8");
 			NDT=numel(DistinctTrials);

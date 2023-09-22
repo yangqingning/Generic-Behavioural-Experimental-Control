@@ -55,7 +55,7 @@ switch Signal
 		if isempty(obj.TIC)
 			obj.TIC=tic;
 		end
-		obj.TimeOffset=Time-toc(obj.TIC)*1000;
+		obj.TimeOffset=Time-seconds(toc(obj.TIC));
 		obj.PreciseRecorder.PushBack(struct(Time=Time,Event=Event));
 		fprintf('%s（%s）',Gbec.LogTranslate(Event),Time);
 	otherwise

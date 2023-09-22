@@ -156,7 +156,10 @@ classdef GratingImage<Gbec.IHostAction
 		function Information=GetInformation(obj)
 			%会话结束后，通过此方法获取信息
 			Events=obj.Logger.GetTimeTable;
-			Information=struct(Width=obj.Width,Height=obj.Height,PixelsPerCycle=obj.PixelsPerCycle,AngleRange=obj.AngleRange,DurationRange=obj.DurationRange,InitialPhase=obj.InitialPhase,ColorRange=obj.ColorRange,Events=[timetable(Events.Time),struct2table(Events.Event,AsArray=true)]);
+			Information=struct(Width=obj.Width,Height=obj.Height,PixelsPerCycle=obj.PixelsPerCycle,AngleRange=obj.AngleRange,DurationRange=obj.DurationRange,InitialPhase=obj.InitialPhase,ColorRange=obj.ColorRange);
+            if ~isempty(Events)
+                Information.Events=[timetable(Events.Time),struct2table(Events.Event,AsArray=true)];
+            end
 		end
 		function delete(obj)
 			delete(obj.Timer);

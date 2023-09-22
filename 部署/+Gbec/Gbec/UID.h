@@ -169,6 +169,7 @@ enum UID : uint8_t {
   Trial_LFImage,
   Trial_HFImage,
   Trial_RandomImage,
+  Trial_RandomFlash,
 
   // 会话UID
 
@@ -180,5 +181,6 @@ enum UID : uint8_t {
   Session_LightAir,
   Session_SurveillanceThroughout,
   Session_HLFImage,
-  Session_RandomImage
+  Session_RandomImage,
+  Session_RandomFlash,
 };

@@ -47,7 +47,7 @@ void TraverseCallback() {
     C();
 }
 template<uint8_t Pin>
-bool NeedSetup;
+bool NeedSetup = true;
 template<uint8_t Pin>
 // 如果试图添加重复的中断回调，则不会添加，也不会出错
 void RisingInterrupt(void (*Callback)()) {
@@ -567,7 +567,6 @@ struct SquareWaveStep : public IStep {
 };
 template<UID TUID, typename... TSteps>
 class Trial : public ITrial {
-  static bool &NeedSetup;
   static const IStep *Steps[sizeof...(TSteps)];
   static void NextStep() {
     while (StepsDone < sizeof...(TSteps))
@@ -581,11 +580,8 @@ public:
   constexpr Trial()
     : ITrial(TUID) {}
   void Setup() const override {
-    if (NeedSetup) {
-      for (const IStep *S : Steps)
-        S->Setup();
-      NeedSetup = false;
-    }
+    for (const IStep *S : Steps)
+      S->Setup();
   }
   bool Start(void (*FC)()) const override {
     FinishCallback = FC;
@@ -605,10 +601,6 @@ public:
     Steps[StepsDone - 1]->Abort();
   }
 };
-template<typename T>
-bool _NeedSetup = true;
-template<UID TUID, typename... TSteps>
-bool &Trial<TUID, TSteps...>::NeedSetup = _NeedSetup<Trial<TUID, TSteps...>>;
 template<UID TUID, typename... TSteps>
 const IStep *Trial<TUID, TSteps...>::Steps[sizeof...(TSteps)] = { &Instance<TSteps>... };
 template<uint16_t Value>
@@ -636,19 +628,16 @@ struct TrialNumberSplit<TTrial, TNumber> {
 template<UID TUID, bool TRandom, typename... TrialThenNumber>
 struct Session : public ISession {
   using TNS = TrialNumberSplit<TrialThenNumber...>;
-  static bool &NeedSetup;
   constexpr static uint8_t NumDistinctTrials = std::extent_v<decltype(TNS::Numbers.Array)>;
   static void ArrangeTrials(const uint16_t *TrialsLeft) {
     TrialQueue.resize(std::accumulate(TrialsLeft, TrialsLeft + NumDistinctTrials, uint16_t(0)));
     const ITrial **const TQStart = TrialQueue.data();
     const ITrial **TQEnd = TQStart;
     for (uint8_t T = 0; T < NumDistinctTrials; ++T) {
-      if (NeedSetup)
-        TNS::Trials_t::Interfaces[T]->Setup();
+      TNS::Trials_t::Interfaces[T]->Setup();
       std::fill_n(TQEnd, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
       TQEnd += TrialsLeft[T];
     }
-    NeedSetup = false;
     if (TRandom)
       std::shuffle(TrialQueue.data(), TQStart, Urng);
     TrialsDone = 0;
@@ -684,7 +673,5 @@ public:
     RunAsync();
   }
 };
-template<UID TUID, bool TRandom, typename... TrialThenNumber>
-bool &Session<TUID, TRandom, TrialThenNumber...>::NeedSetup = _NeedSetup<Session<TUID, TRandom, TrialThenNumber...>>;
 template<typename... Ts>
 const std::map<UID, const ISession *> SessionMap_t{ { Instance<Ts>.MyUID, &Instance<Ts> }... };

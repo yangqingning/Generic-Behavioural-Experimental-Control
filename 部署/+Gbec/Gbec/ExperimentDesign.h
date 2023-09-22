@@ -2,17 +2,41 @@
 #include "Predefined.h"
 #define Pin constexpr uint8_t
 
-// 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
-
+/* 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
+可以使用预处理指令配置多个不同设备的不同引脚号
+*/
+#define BOX 1
+#if BOX == 1
 Pin pCD1 = 9;
-Pin pBlueLed = 3;
-Pin pActiveBuzzer = 6;
-Pin pWaterPump = 8;
+Pin pBlueLed = 11;
+Pin pActiveBuzzer = 52;
+Pin pWaterPump = 2;
 Pin pAirPuff = 7;
-Pin pCapacitorVdd = 22;
+Pin pCapacitorVdd = 7;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 25;
 Pin pLaser = 4;
+#elif BOX == 2
+Pin pCD1 = 9;
+Pin pBlueLed = 8;
+Pin pActiveBuzzer = 22;
+Pin pWaterPump = 2;
+Pin pAirPuff = 12;
+Pin pCapacitorVdd = 7;
+Pin pCapacitorOut = 18;
+Pin pPassiveBuzzer = 25;
+Pin pLaser = 4;
+#elif BOX == 3
+Pin pCD1 = 9;
+Pin pBlueLed = 11;
+Pin pActiveBuzzer = 22;
+Pin pWaterPump = 2;
+Pin pAirPuff = 12;
+Pin pCapacitorVdd = 6;
+Pin pCapacitorOut = 18;
+Pin pPassiveBuzzer = 25;
+Pin pLaser = 4;
+#endif
 
 // 设备特定初始化，例如电容的启动
 void PinSetup() {
@@ -70,8 +94,8 @@ const auto &TestMap = TestMap_t<
   PinFlashTest<Test_Air, pAirPuff, 2, 150>,
   PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
   MonitorTest<Test_CapacitorMonitor, pCapacitorOut>,
-  SquareWaveTest<Test_SquareWave, pLaser, 3, 30, 30, 30>,
-  RandomFlashTest<Test_RandomFlash, pLaser, 3, 4000, 8000, 300, 3000>>;
+  SquareWaveTest<Test_SquareWave, pBlueLed, 3, 2000, 1000, 10>,
+  RandomFlashTest<Test_RandomFlash, pBlueLed, 3, 4000, 8000, 30, 300>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
@@ -138,7 +162,7 @@ MissReporter，用于汇报错失的步骤。必须指定Monitor_ReportMiss旗�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sMonitorLick = MonitorStep<pCapacitorOut, 5, 1000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
+using sMonitorLick = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, S<Signal_MonitorHit>, S<Signal_MonitorMiss>>;
 using sResponseWindow = MonitorStep<pCapacitorOut, 5, 2000, Monitor_ReportOnce, sWater, S<Signal_MonitorMiss>>;
 
 /*等待类步骤
@@ -203,7 +227,7 @@ Event，要记录的事件UID
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sLog = PreciseLogStep<5, Signal_Laser>;
+using sLog = PreciseLogStep<4, Signal_Laser>;
 
 /*随机闪烁类步骤
 
@@ -222,7 +246,7 @@ ReportEachCycle，是否每个循环都触发汇报器。若true，则每次高�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
-using sRandomFlash = RandomFlashStep<pLaser, 3, 4000, 8000, 300, 3000>;
+using sRandomFlash = RandomFlashStep<pBlueLed, 3, 1000, 1000, 10, 100>;
 
 /*回合设计。
 一个回合由多个步骤串联而成。语法：
@@ -244,6 +268,7 @@ using tLightWater = Trial<Trial_LightWater, sCalmDown, sLight, sTag, sMonitorLic
 using tAudioWater = Trial<Trial_AudioWater, sCalmDown, sAudio, sTag, sMonitorLick, sWater, sFixedITI>;
 using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sLight, sDelay, sAir, sRandomITI>;
 using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
+using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
 
 const auto &SessionMap = SessionMap_t<
   /*会话设计
@@ -264,4 +289,5 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
   //此会话要求主机端配置能根据串口指示显示高低频图像的HostAction
   Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>,
-  Session<Session_RandomImage, false, tRandomImage, N<100>>>;
+  Session<Session_RandomImage, false, tRandomImage, N<100>>,
+  Session<Session_RandomFlash, false, tRandomFlash, N<3>>>;
