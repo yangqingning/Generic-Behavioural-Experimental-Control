@@ -74,9 +74,8 @@ Debug.mlx</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="1.14" fromRepository="true" id="e563da55-4a80-11e4-9553-005056977bd0" include="true" latest="latest">cprintf - display formatted colored text in Command Window</requiredAddOn>
-        <requiredAddOn earliest="1.0.2.0" fromRepository="true" id="85f2e628-cb9d-426b-b596-0a88b613d14f" include="true" latest="latest">埃博拉酱的文本分析工具箱(2)</requiredAddOn>
-        <requiredAddOn earliest="15.0.0.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension</requiredAddOn>
+        <requiredAddOn earliest="15.0.0.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(3)</requiredAddOn>
+        <requiredAddOn earliest="1.0.2.0" fromRepository="true" id="85f2e628-cb9d-426b-b596-0a88b613d14f" include="true" latest="latest">埃博拉酱的文本分析工具箱</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -127,6 +126,7 @@ Debug.mlx</param.exclude.filters>
       <file>${PROJECT_ROOT}\部署</file>
     </fileset.rootfiles>
     <fileset.depfun.included>
+      <file>C:\Users\vhtmf\Documents\MATLAB\+Gbec\LogTranslate.mlx</file>
       <file>C:\Users\vhtmf\Documents\MATLAB\+Gbec\UID.m</file>
     </fileset.depfun.included>
     <fileset.depfun.excluded>
