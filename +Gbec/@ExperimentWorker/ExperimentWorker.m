@@ -140,12 +140,12 @@ classdef ExperimentWorker<handle
 			if isempty(SignalRecord)
 				SignalRecord=dictionary;
 			end
-			if SignalRecord.isKey(Signal)
+			if SignalRecord.isConfigured&&SignalRecord.isKey(Signal)
 				SR=SignalRecord(Signal)+1;
 			else
 				SR=1;
 			end
-			fprintf('%s：%u',Gbec.LogTranslate(Signal),SR);
+			fprintf('%s：%u\n',Gbec.LogTranslate(Signal),SR);
 			SignalRecord(Signal)=SR;
 		end
 		function HandleSignal(obj,Signal)
@@ -159,7 +159,7 @@ classdef ExperimentWorker<handle
 		function obj=ExperimentWorker
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
-			obj.WatchDog=timer(StartDelay=20,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
+			obj.WatchDog=timer(StartDelay=30,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 			obj.PreciseRecorder=MATLAB.Containers.Vector;
@@ -213,6 +213,7 @@ classdef ExperimentWorker<handle
 			end
 			obj.Serial.configureCallback("off");
 			obj.SignalHandler=function_handle.empty;
+			obj.WatchDog.stop;
 			obj.WatchDog.start;
 		end
 		function StopTest(obj,TestUID)
@@ -323,8 +324,12 @@ classdef ExperimentWorker<handle
 			SFT=obj.WatchDog.StartDelay;
 		end
 		function set.ShutdownSerialAfter(obj,SSA)
-			obj.FeedDog;
+			WatchDogRunning=obj.WatchDog.Running=="on";
+			obj.WatchDog.stop;
 			obj.WatchDog.StartDelay=SSA;
+			if WatchDogRunning
+				obj.WatchDog.start;
+			end
 		end
 		function Information = GetInformation(obj,SessionUID)
 			%获取会话信息
