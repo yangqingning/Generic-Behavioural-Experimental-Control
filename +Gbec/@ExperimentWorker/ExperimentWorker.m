@@ -53,6 +53,7 @@ classdef ExperimentWorker<handle
 	end
 	methods(Access=protected)
 		function AbortAndSave(obj)
+			%此方法将负责启用看门狗
 			obj.EventRecorder.LogEvent(Gbec.UID.State_SessionAborted);
 			disp('会话已放弃');
 			if ~isempty(obj.VideoInput)
@@ -135,16 +136,17 @@ classdef ExperimentWorker<handle
 			end
 		end
 		function TestHandler(~,Signal)
-			persistent SignalIndex
-			if isempty(SignalIndex)
-				SignalIndex=0;
+			persistent SignalRecord
+			if isempty(SignalRecord)
+				SignalRecord=dictionary;
 			end
-			if Signal==Gbec.UID.Signal_MonitorHit
-				SignalIndex=SignalIndex+1;
-				disp("成功检测到触摸信号："+num2str(SignalIndex));
+			if SignalRecord.isKey(Signal)
+				SR=SignalRecord(Signal)+1;
 			else
-				warning('收到非法信号');
+				SR=1;
 			end
+			fprintf('%s：%u',Gbec.LogTranslate(Signal),SR);
+			SignalRecord(Signal)=SR;
 		end
 		function HandleSignal(obj,Signal)
 			if isempty(obj.SignalHandler)
@@ -161,6 +163,12 @@ classdef ExperimentWorker<handle
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 			obj.PreciseRecorder=MATLAB.Containers.Vector;
+		end
+		function FeedDog(obj)
+			if obj.WatchDog.Running=="on"
+				obj.WatchDog.stop;
+				obj.WatchDog.start;
+			end
 		end
 	end
 	methods(Static)
@@ -221,6 +229,7 @@ classdef ExperimentWorker<handle
 				TestUID=Gbec.UID.Test_Last
 			end
 			import Gbec.UID
+			obj.FeedDog;
 			obj.ApiCall(UID.API_TestStop);
 			obj.Serial.write(TestUID,'uint8');
 			while true
@@ -237,15 +246,11 @@ classdef ExperimentWorker<handle
 						disp('测试结束');
 						break;
 					case UID.Signal_NoLastTest
-						obj.WatchDog.stop;
-						obj.WatchDog.start;
 						Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
 					case UID.Signal_NoSuchTest
 						Gbec.GbecException.Test_not_found_on_Arduino.Throw;
 					otherwise
-						obj.WatchDog.stop;
-						obj.HandleSignal(Signal);
-						obj.WatchDog.start;
+						obj.HandleSignal(Signal)
 				end
 			end
 		end
@@ -253,6 +258,7 @@ classdef ExperimentWorker<handle
 			%暂停会话
 			import Gbec.UID
 			import Gbec.GbecException
+			obj.FeedDog;
 			if obj.State==UID.State_SessionRestored||obj.State==UID.State_SessionPaused
 				GbecException.Cannot_pause_a_paused_session.Throw;
 			end
@@ -261,8 +267,6 @@ classdef ExperimentWorker<handle
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
-						obj.WatchDog.stop;
-						obj.WatchDog.start;
 						GbecException.No_sessions_are_running.Throw;
 					case UID.State_SessionPaused
 						obj.EventRecorder.LogEvent(UID.State_SessionPaused);
@@ -272,17 +276,11 @@ classdef ExperimentWorker<handle
 						obj.State=UID.State_SessionPaused;
 						break;
 					case UID.State_SessionAborted
-						obj.WatchDog.stop;
-						obj.WatchDog.start;
 						GbecException.Cannot_pause_an_aborted_session.Throw;
 					case UID.State_SessionFinished
-						obj.WatchDog.stop;
-						obj.WatchDog.start;
 						GbecException.Cannot_pause_a_finished_session.Throw;
 					otherwise
-						obj.WatchDog.stop;
 						obj.HandleSignal(Signal);
-						obj.WatchDog.start;
 				end
 			end
 		end
@@ -290,6 +288,7 @@ classdef ExperimentWorker<handle
 			%放弃会话
 			import Gbec.UID
 			import Gbec.GbecException
+			obj.FeedDog;
 			switch obj.State
 				case UID.State_SessionRestored
 					obj.AbortAndSave;
@@ -320,9 +319,11 @@ classdef ExperimentWorker<handle
 			delete(obj.Serial);
 		end
 		function SFT=get.ShutdownSerialAfter(obj)
+			obj.FeedDog;
 			SFT=obj.WatchDog.StartDelay;
 		end
 		function set.ShutdownSerialAfter(obj,SSA)
+			obj.FeedDog;
 			obj.WatchDog.StartDelay=SSA;
 		end
 		function Information = GetInformation(obj,SessionUID)
@@ -344,21 +345,19 @@ classdef ExperimentWorker<handle
 				SessionUID=Gbec.UID.Session_Current
 			end
 			import Gbec.UID
-			obj.WatchDog.stop;
+			obj.FeedDog;
 			obj.ApiCall(UID.API_GetInfo);
 			obj.Serial.write(SessionUID,'uint8');
 			while true
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
-						obj.WatchDog.start;
 						Gbec.GbecException.Must_run_session_before_getting_information.Throw;
 					case UID.Signal_InfoStart
 						Information=CollectStruct(obj.Serial);
 						if ~isempty(obj.HostAction)
 							Information.HostAction=obj.HostAction.GetInformation;
 						end
-						obj.WatchDog.start;
 						break;
 					case UID.State_SessionRunning
 						Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
@@ -369,6 +368,7 @@ classdef ExperimentWorker<handle
 		end
 		function PeekState(EW)
 			%观察会话当前的运行状态
+			obj.FeedDog;
 			EW.ApiCall(Gbec.UID.API_Peek);
 			disp(Gbec.UID(EW.WaitForSignal));
 		end

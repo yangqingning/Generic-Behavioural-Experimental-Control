@@ -31,10 +31,8 @@ switch Signal
 		end
 		fprintf('\n');
 		obj.Serial.configureCallback('off');
-		if obj.ShutDownSerialAfterSession
-			obj.WatchDog.start;
-		end
 		obj.State=UID.State_SessionFinished;
+		obj.WatchDog.start;
 	case UID.Signal_StartRecord
 		if isempty(obj.VideoInput)
 			Gbec.GbecException.Cannot_record_without_VideoInput.Throw;
