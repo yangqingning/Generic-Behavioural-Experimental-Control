@@ -11,8 +11,6 @@ classdef ExperimentWorker<handle
 		MiaoCode(1,1)string=""
 		%喵提醒重试次数
 		HttpRetryTimes(1,1)uint8=3
-		%会话结束后是否自动关闭串口
-		ShutDownSerialAfterSession(1,1)logical
 		%当前运行会话
 		SessionUID(1,1)Gbec.UID
 		%日期时间
@@ -39,7 +37,7 @@ classdef ExperimentWorker<handle
 		Serial internal.Serialport
 		State=Gbec.UID.State_SessionInvalid
 		%没有对象无法初始化
-		WatchDog
+		WatchDog timer
 		SignalHandler
 		TIC
 		TimeOffset
@@ -50,8 +48,8 @@ classdef ExperimentWorker<handle
 		PreciseRecorder MATLAB.Containers.Vector
 	end
 	properties(Dependent)
-		%如果启用会话结束后自动关闭串口功能，该属性设置关闭串口的延迟时间
-		SerialFreeTime(1,1)double
+		%设置多少秒无操作后自动关闭串口
+		ShutdownSerialAfter
 	end
 	methods(Access=protected)
 		function AbortAndSave(obj)
@@ -66,7 +64,7 @@ classdef ExperimentWorker<handle
 				else
 					if isequaln(obj.MergeData,missing)
 						delete(obj.SavePath);
-                    else
+					else
 						[Directory,Filename]=fileparts(obj.SavePath);
 						movefile(fullfile(Directory,Filename+".将合并.mat"),obj.SavePath,'f');
 					end
@@ -159,7 +157,7 @@ classdef ExperimentWorker<handle
 		function obj=ExperimentWorker
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
-			obj.WatchDog=timer(StartDelay=10,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
+			obj.WatchDog=timer(StartDelay=20,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 			obj.PreciseRecorder=MATLAB.Containers.Vector;
@@ -205,9 +203,9 @@ classdef ExperimentWorker<handle
 				obj.WatchDog.TimerFcn=@(~,~)ReleaseSerial(obj.Serial);
 				obj.Serial.ErrorOccurredFcn=@obj.InterruptRetry;
 			end
-			obj.WatchDog.stop;
 			obj.Serial.configureCallback("off");
 			obj.SignalHandler=function_handle.empty;
+			obj.WatchDog.start;
 		end
 		function StopTest(obj,TestUID)
 			%停止测试
@@ -233,16 +231,21 @@ classdef ExperimentWorker<handle
 						disp('测试结束');
 						obj.Serial.configureCallback('off');
 						obj.SignalHandler=function_handle.empty;
+						obj.WatchDog.start;
 						break;
 					case UID.State_SessionRunning
 						disp('测试结束');
 						break;
 					case UID.Signal_NoLastTest
+						obj.WatchDog.stop;
+						obj.WatchDog.start;
 						Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
 					case UID.Signal_NoSuchTest
 						Gbec.GbecException.Test_not_found_on_Arduino.Throw;
 					otherwise
+						obj.WatchDog.stop;
 						obj.HandleSignal(Signal);
+						obj.WatchDog.start;
 				end
 			end
 		end
@@ -258,6 +261,8 @@ classdef ExperimentWorker<handle
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
+						obj.WatchDog.stop;
+						obj.WatchDog.start;
 						GbecException.No_sessions_are_running.Throw;
 					case UID.State_SessionPaused
 						obj.EventRecorder.LogEvent(UID.State_SessionPaused);
@@ -267,11 +272,17 @@ classdef ExperimentWorker<handle
 						obj.State=UID.State_SessionPaused;
 						break;
 					case UID.State_SessionAborted
+						obj.WatchDog.stop;
+						obj.WatchDog.start;
 						GbecException.Cannot_pause_an_aborted_session.Throw;
 					case UID.State_SessionFinished
+						obj.WatchDog.stop;
+						obj.WatchDog.start;
 						GbecException.Cannot_pause_a_finished_session.Throw;
 					otherwise
+						obj.WatchDog.stop;
 						obj.HandleSignal(Signal);
+						obj.WatchDog.start;
 				end
 			end
 		end
@@ -308,11 +319,11 @@ classdef ExperimentWorker<handle
 			delete(obj.WatchDog);
 			delete(obj.Serial);
 		end
-		function SFT=get.SerialFreeTime(obj)
+		function SFT=get.ShutdownSerialAfter(obj)
 			SFT=obj.WatchDog.StartDelay;
 		end
-		function set.SerialFreeTime(obj,SFT)
-			obj.WatchDog.StartDelay=SFT;
+		function set.ShutdownSerialAfter(obj,SSA)
+			obj.WatchDog.StartDelay=SSA;
 		end
 		function Information = GetInformation(obj,SessionUID)
 			%获取会话信息
@@ -340,12 +351,14 @@ classdef ExperimentWorker<handle
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
+						obj.WatchDog.start;
 						Gbec.GbecException.Must_run_session_before_getting_information.Throw;
 					case UID.Signal_InfoStart
 						Information=CollectStruct(obj.Serial);
 						if ~isempty(obj.HostAction)
 							Information.HostAction=obj.HostAction.GetInformation;
 						end
+						obj.WatchDog.start;
 						break;
 					case UID.State_SessionRunning
 						Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
