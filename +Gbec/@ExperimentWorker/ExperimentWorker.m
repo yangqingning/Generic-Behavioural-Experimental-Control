@@ -48,7 +48,7 @@ classdef ExperimentWorker<handle
 		PreciseRecorder MATLAB.Containers.Vector
 	end
 	properties(Dependent)
-		%设置多少秒无操作后自动关闭串口
+		%设置多少秒无操作后自动关闭串口，默认3分钟
 		ShutdownSerialAfter
 	end
 	methods(Access=protected)
@@ -159,7 +159,7 @@ classdef ExperimentWorker<handle
 		function obj=ExperimentWorker
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
-			obj.WatchDog=timer(StartDelay=60,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
+			obj.WatchDog=timer(StartDelay=180,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 			obj.PreciseRecorder=MATLAB.Containers.Vector;
