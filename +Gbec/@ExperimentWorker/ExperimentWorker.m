@@ -3,7 +3,8 @@ classdef ExperimentWorker<handle
 	%一般不直接使用该类，而是通过*_Client.mlx实时脚本作为用户界面来操纵实验。当然您也可以根据我们提供的Client脚本学习本类的使用方法。
 	%此类不支持直接构造。使用静态方法New获取此类的实例。
 	properties
-		%实验记录保存路径
+		%实验记录保存路径。
+		% 如果那个路径已经有数据库文件，将尝试合并，然后为多天的行为做学习曲线图。
 		SavePath(1,1)string
 		%实验结束后是否保存记录
 		SaveFile(1,1)logical=true
