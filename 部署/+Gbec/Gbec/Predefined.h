@@ -66,10 +66,6 @@ void DetachInterrupt(void (*Callback)()) {
     detachInterrupt(digitalPinToInterrupt(Pin));
 }
 template<uint8_t TimerCode>
-uint16_t RandomCycle;
-template<uint8_t TimerCode>
-uint16_t Milliseconds;
-template<uint8_t TimerCode>
 void (*FinishCallback)();
 template<uint8_t TimerCode>
 bool NoHits;
@@ -97,41 +93,64 @@ struct PinFlashTest : public ITest {
     return true;
   }
 };
-template<uint16_t Min, uint16_t Max, uint8_t TimerCode>
-inline void SetRandomCycle() {
-  RandomCycle<TimerCode> = random(Min, Max + 1);
-  if (RandomCycle<TimerCode> + Min > Milliseconds<TimerCode>)
-    RandomCycle<TimerCode> = RandomCycle<TimerCode> < Milliseconds<TimerCode> ? (Max < Milliseconds<TimerCode> ? Milliseconds<TimerCode> - Min : (RandomCycle<TimerCode> < Milliseconds<TimerCode> + Milliseconds<TimerCode> - Min ? Milliseconds<TimerCode> - Min : Milliseconds<TimerCode>)) : Milliseconds<TimerCode>;
-  Milliseconds<TimerCode> -= RandomCycle<TimerCode>;
+template<uint8_t TimerCode>
+std::vector<uint16_t> FlashCycles;
+template<uint8_t TimerCode>
+std::vector<uint16_t>::const_iterator CurrentCycle;
+template<uint8_t TimerCode>
+std::vector<uint16_t>::const_iterator CycleEnd;
+template<uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax>
+void PopulateRandomCycles(uint8_t Times = 1) {
+  static constexpr uint16_t FullMilliseconds = HighMilliseconds + LowMilliseconds;
+  static constexpr float HighRatio = (float)HighMilliseconds / FullMilliseconds;
+  FlashCycles<TimerCode>.clear();
+  uint16_t MillisecondsLeft = FullMilliseconds * Times;
+  while (MillisecondsLeft) {
+    uint16_t RandomCycle = random(RandomCycleMin, RandomCycleMax + 1);
+    if (RandomCycle + RandomCycleMin > MillisecondsLeft)
+      RandomCycle = RandomCycle < MillisecondsLeft ? (RandomCycleMax < MillisecondsLeft ? MillisecondsLeft - RandomCycleMin : (RandomCycle < MillisecondsLeft + MillisecondsLeft - RandomCycleMin ? MillisecondsLeft - RandomCycleMin : MillisecondsLeft)) : MillisecondsLeft;
+    MillisecondsLeft -= RandomCycle;
+    const float FloatHigh = RandomCycle * HighRatio;
+    uint16_t IntegerHigh = FloatHigh;
+    if (IntegerHigh & 1) {
+      if (FloatHigh >= IntegerHigh + 0.5)
+        IntegerHigh++;
+    } else {
+      if (FloatHigh > IntegerHigh + 0.5)
+        IntegerHigh++;
+    }
+    FlashCycles<TimerCode>.push_back(IntegerHigh);
+    FlashCycles<TimerCode>.push_back(RandomCycle - IntegerHigh);
+  }
+  CurrentCycle<TimerCode> = FlashCycles<TimerCode>.cbegin();
+  CycleEnd<TimerCode> = FlashCycles<TimerCode>.cend();
 }
 // 给引脚一段时间的高或低电平，然后反转
 template<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax>
 struct RandomFlashTest : public ITest {
   constexpr RandomFlashTest()
     : ITest(TMyUID) {}
-  static constexpr float FullMilliseconds = HighMilliseconds + LowMilliseconds;
-  static constexpr float HighRatio = HighMilliseconds / FullMilliseconds;
-  static constexpr float LowRatio = LowMilliseconds / FullMilliseconds;
   bool Start(uint16_t TestTimes) const override {
     if (NeedSetup<Pin>) {
       pinMode(Pin, OUTPUT);
       NeedSetup<Pin> = false;
     }
     if (HighMilliseconds) {
-      Milliseconds<TimerCode> = FullMilliseconds * TestTimes;
+      PopulateRandomCycles<TimerCode, HighMilliseconds, LowMilliseconds, RandomCycleMin, RandomCycleMax>(TestTimes);
       SetHigh();
     }
     return true;
   }
 protected:
   static void SetHigh() {
-    DigitalWrite<Pin, HIGH>();
-    SetRandomCycle<RandomCycleMin, RandomCycleMax, TimerCode>();
-    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * HighRatio, Milliseconds<TimerCode> ? SetLow : DigitalWrite<Pin, LOW>);
+    if (CurrentCycle<TimerCode> < CycleEnd<TimerCode>) {
+      DigitalWrite<Pin, HIGH>();
+      TimersOneForAll::DoAfter<TimerCode>(*(CurrentCycle<TimerCode> ++), SetLow);
+    }
   }
   static void SetLow() {
     DigitalWrite<Pin, LOW>();
-    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * LowRatio, SetHigh);
+    TimersOneForAll::DoAfter<TimerCode>(*(CurrentCycle<TimerCode> ++), SetHigh);
   }
 };
 // 监视引脚，每次高电平发送串口报告。此测试需要调用Stop才能终止，且无视TestTimes参数
@@ -267,6 +286,8 @@ template<typename... Ts>
 InfoStruct(UID, Ts...) -> InfoStruct<UID, Ts...>;
 #pragma pack(pop)
 using NullStep = IStep;
+template<uint8_t TimerCode>
+uint16_t Milliseconds;
 // 持续等待，直到指定引脚在指定连续毫秒数内都保持静默才结束
 template<uint8_t Pin, uint8_t TimerCode, uint16_t MinMilliseconds, uint16_t MaxMilliseconds = MinMilliseconds, UID MyUID = Step_Calmdown>
 class CalmdownStep : public IStep {
@@ -345,27 +366,19 @@ public:
 // 在一段时间内随机闪烁引脚。指定高电平和低电平总时长，以及每次闪烁的随机范围。
 template<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax, typename UpReporter = NullStep, typename DownReporter = NullStep, bool ReportEachCycle = false, UID MyUID = Step_RandomFlash>
 class RandomFlashStep : public IStep {
-  static constexpr float FullMilliseconds = HighMilliseconds + LowMilliseconds;
-  static constexpr float HighRatio = HighMilliseconds / FullMilliseconds;
-  static constexpr float LowRatio = LowMilliseconds / FullMilliseconds;
-  static void SetEnd() {
-    Report<DownReporter>();
-    DigitalWrite<Pin, LOW>();
-  }
   static void SetHigh() {
-    // 能进SetHigh必然有HighLeft，所以不用检查
-    if (ReportEachCycle)
-      Report<UpReporter>();
-    DigitalWrite<Pin, HIGH>();
-    SetRandomCycle<RandomCycleMin, RandomCycleMax, TimerCode>();
-    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * HighRatio, Milliseconds<TimerCode> ? SetLow : SetEnd);
+    if (CurrentCycle<TimerCode> < CycleEnd<TimerCode>) {
+      if (ReportEachCycle)
+        Report<UpReporter>();
+      DigitalWrite<Pin, HIGH>();
+      TimersOneForAll::DoAfter<TimerCode>(*(CurrentCycle<TimerCode> ++), SetLow);
+    }
   }
   static void SetLow() {
-    // 能进SetLow必然HighLeft和LowLeft兼有
     if (ReportEachCycle)
       Report<DownReporter>();
     DigitalWrite<Pin, LOW>();
-    TimersOneForAll::DoAfter<TimerCode>(RandomCycle<TimerCode> * LowRatio, SetHigh);
+    TimersOneForAll::DoAfter<TimerCode>(*(CurrentCycle<TimerCode> ++), SetHigh);
   }
 
 public:
@@ -373,9 +386,9 @@ public:
     if (!ReportEachCycle)
       Report<UpReporter>();
     if (HighMilliseconds) {
-      Milliseconds<TimerCode> = FullMilliseconds;
+      PopulateRandomCycles<TimerCode, HighMilliseconds, LowMilliseconds, RandomCycleMin, RandomCycleMax>();
       SetHigh();
-    } else
+    } else if (!ReportEachCycle)
       Report<DownReporter>();
     return false;
   }
