@@ -41,10 +41,12 @@ constexpr bool PinInterruptable(uint8_t Pin) {
     }
   return Found;
 }
+extern UID State;
 template<uint8_t Pin>
 void TraverseCallback() {
-  for (void (*const C)() : CallbackSet<Pin>)
-    C();
+  if (State != State_SessionPaused)
+    for (void (*const C)() : CallbackSet<Pin>)
+      C();
 }
 template<uint8_t Pin>
 bool NeedSetup = true;

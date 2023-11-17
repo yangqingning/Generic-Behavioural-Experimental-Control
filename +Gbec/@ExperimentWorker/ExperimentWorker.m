@@ -310,8 +310,7 @@ classdef ExperimentWorker<handle
 								break;
 							case UID.State_SessionFinished
 								GbecException.Cannot_abort_a_finished_session.Throw;
-							otherwise
-								obj.HandleSignal(Signal);
+								%异常信号应该直接忽略
 						end
 					end
 			end
