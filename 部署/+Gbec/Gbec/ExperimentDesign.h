@@ -5,7 +5,7 @@
 /* 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
 可以使用预处理指令配置多个不同设备的不同引脚号
 */
-#define BOX 1
+#define BOX 3
 #if BOX == 1
 Pin pCD1 = 9;
 Pin pBlueLed = 11;
@@ -269,6 +269,8 @@ using tAudioWater = Trial<Trial_AudioWater, sCalmDown, sAudio, sTag, sMonitorLic
 using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sLight, sDelay, sAir, sRandomITI>;
 using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
 using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
+using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
+using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
 
 const auto &SessionMap = SessionMap_t<
   /*会话设计
@@ -283,7 +285,7 @@ const auto &SessionMap = SessionMap_t<
 	  */
   Session<Session_LAWLw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>>,
   Session<Session_LAWLwAw, true, tLightOnly, N<20>, tAudioOnly, N<20>, tWaterOnly, N<20>, tLightWater, N<20>, tAudioWater, N<20>>,
-  Session<Session_LightWater, false, tLightWater, N<30>>,
+  Session<Session_LightWater, false, tStartMonitor, N<1>, tLightWater, N<30>, tStopMonitor, N<1>>,
   Session<Session_AudioWater, false, tAudioWater, N<30>>,
   Session<Session_LightAir, false, tLightAir, N<30>>,
   Session<Session_SurveillanceThroughout, false, Trial<Trial_StartMonitor, sStartMonitor>, N<1>, tWaterOnly, N<5>, tLightDelayWater, N<10>, Trial<Trial_StopMonitor, sStopMonitor>, N<1>>,
