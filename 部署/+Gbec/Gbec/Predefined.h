@@ -646,15 +646,14 @@ struct Session : public ISession {
   constexpr static uint8_t NumDistinctTrials = std::extent_v<decltype(TNS::Numbers.Array)>;
   static void ArrangeTrials(const uint16_t *TrialsLeft) {
     TrialQueue.resize(std::accumulate(TrialsLeft, TrialsLeft + NumDistinctTrials, uint16_t(0)));
-    const ITrial **const TQStart = TrialQueue.data();
-    const ITrial **TQEnd = TQStart;
+    const ITrial **TQEnd = TrialQueue.data();
     for (uint8_t T = 0; T < NumDistinctTrials; ++T) {
       TNS::Trials_t::Interfaces[T]->Setup();
       std::fill_n(TQEnd, TrialsLeft[T], TNS::Trials_t::Interfaces[T]);
       TQEnd += TrialsLeft[T];
     }
     if (TRandom)
-      std::shuffle(TrialQueue.data(), TQStart, Urng);
+      std::shuffle(TrialQueue.data(), TQEnd, Urng);
     TrialsDone = 0;
   }
 

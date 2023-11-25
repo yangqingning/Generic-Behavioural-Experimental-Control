@@ -1,5 +1,5 @@
 function V=Version
-V.Me='v6.0.0';
+V.Me='v6.0.1';
 V.MatlabExtension=MATLAB.Version;
 V.MATLAB=matlabRelease().Release;
 V.Deploy=6;
