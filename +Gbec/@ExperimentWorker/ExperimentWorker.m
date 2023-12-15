@@ -196,6 +196,11 @@ classdef ExperimentWorker<handle
 			% ```
 			%# 输入参数
 			% SerialPort(1,1)string，串口名称
+			if obj.State==Gbec.UID.State_SessionRunning
+				if questdlg('当前会话正在运行，是否强行初始化？','会话运行中','确定','取消','取消')~="确定"
+					return;
+				end
+			end
 			try
 				assert(obj.Serial.Port==SerialPort);
 				obj.ApiCall(Gbec.UID.API_IsReady);
