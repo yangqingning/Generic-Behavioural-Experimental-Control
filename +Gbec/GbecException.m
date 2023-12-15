@@ -29,5 +29,7 @@ classdef GbecException<MATLAB.Lang.IEnumerableException
 		Arduino_requires_undefined_HostAction
 		Grating_properties_invalid
 		No_right_to_write_SavePath
+		User_canceled_operation
+		Serialport_disconnected
 	end
 end

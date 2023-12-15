@@ -197,9 +197,7 @@ classdef ExperimentWorker<handle
 			%# 输入参数
 			% SerialPort(1,1)string，串口名称
 			if obj.State==Gbec.UID.State_SessionRunning
-				if questdlg('当前会话正在运行，是否强行初始化？','会话运行中','确定','取消','取消')~="确定"
-					return;
-				end
+				Gbec.GbecException.There_is_already_a_session_running.Throw;
 			end
 			try
 				assert(obj.Serial.Port==SerialPort);
@@ -302,7 +300,14 @@ classdef ExperimentWorker<handle
 				case UID.State_SessionAborted
 					GbecException.Cannot_abort_an_aborted_session.Throw;
 				otherwise
-					obj.ApiCall(UID.API_Abort);
+					try
+						obj.ApiCall(UID.API_Abort);
+					catch ME
+						if ME.identifier=="MATLAB:class:InvalidHandle"
+							obj.State=UID.State_SessionInvalid;
+							Gbec.GbecException.Serialport_disconnected.Throw('串口已断开，请重新初始化');
+						end
+					end
 					while true
 						Signal=obj.WaitForSignal;
 						switch Signal
