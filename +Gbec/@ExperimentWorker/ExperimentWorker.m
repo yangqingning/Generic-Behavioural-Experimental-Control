@@ -188,38 +188,6 @@ classdef ExperimentWorker<handle
 		end
 	end
 	methods
-		function SerialInitialize(obj,SerialPort)
-			%初始化串口
-			%# 语法
-			% ```MATLAB
-			% obj.SerialInitialize(SerialPort);
-			% ```
-			%# 输入参数
-			% SerialPort(1,1)string，串口名称
-			if obj.State==Gbec.UID.State_SessionRunning
-				Gbec.GbecException.There_is_already_a_session_running.Throw;
-			end
-			try
-				assert(obj.Serial.Port==SerialPort);
-				obj.ApiCall(Gbec.UID.API_IsReady);
-				assert(obj.WaitForSignal==Gbec.UID.Signal_SerialReady);
-			catch
-				delete(obj.Serial);
-				obj.Serial=serialport(SerialPort,9600);
-				%刚刚初始化时不能向串口发送数据，只能等待Arduino主动宣布初始化完毕
-				if obj.WaitForSignal==Gbec.UID.Signal_SerialReady
-					obj.Serial.write(randi(intmax('uint32'),'uint32'),'uint32');
-				else
-					Gbec.GbecException.Serial_handshake_failed.Throw;
-				end
-				obj.WatchDog.TimerFcn=@(~,~)ReleaseSerial(obj.Serial);
-				obj.Serial.ErrorOccurredFcn=@obj.InterruptRetry;
-			end
-			obj.Serial.configureCallback("off");
-			obj.SignalHandler=function_handle.empty;
-			obj.WatchDog.stop;
-			obj.WatchDog.start;
-		end
 		function StopTest(obj,TestUID)
 			%停止测试
 			%仅适用于手动结束类测试。自动结束类测试不能停止。
