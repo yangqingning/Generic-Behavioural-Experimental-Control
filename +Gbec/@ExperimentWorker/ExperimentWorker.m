@@ -160,7 +160,7 @@ classdef ExperimentWorker<handle
 		function obj=ExperimentWorker
 			%构造对象，建议使用MATLAB.Lang.Owner包装对象，不要直接存入工作区，否则清空变量时可能不能正确断开串口
 			disp(['通用行为实验控制器' Gbec.Version().Me ' by 张天夫']);
-			obj.WatchDog=timer(StartDelay=180,TimerFcn=@(~,~)ReleaseSerial(obj.Serial));
+			obj.WatchDog=timer(StartDelay=1,TimerFcn=@obj.ReleaseSerial);
 			obj.EventRecorder=MATLAB.DataTypes.EventLogger;
 			obj.TrialRecorder=MATLAB.DataTypes.EventLogger;
 			obj.PreciseRecorder=MATLAB.Containers.Vector;
@@ -170,6 +170,11 @@ classdef ExperimentWorker<handle
 				obj.WatchDog.stop;
 				obj.WatchDog.start;
 			end
+		end
+		function ReleaseSerial(obj,~,~)
+			%此函数不能作为文件内私有函数，因为被文件外函数调用
+			delete(obj.Serial);
+			disp('串口已释放');
 		end
 	end
 	methods(Static)
@@ -356,8 +361,4 @@ classdef ExperimentWorker<handle
 			disp(Gbec.UID(EW.WaitForSignal));
 		end
 	end
-end
-function ReleaseSerial(Serial)
-delete(Serial);
-disp('串口已释放');
 end
