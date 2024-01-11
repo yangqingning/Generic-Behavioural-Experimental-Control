@@ -98,7 +98,7 @@ classdef ExperimentWorker<handle
 					case Gbec.UID.Signal_ApiFound
 						break
 					case Gbec.UID.Signal_ApiInvalid
-						Gbec.GbecException.Arduino_received_unsupported_API_code.Throw;
+						Gbec.Exceptions.Arduino_received_unsupported_API_code.Throw;
 					otherwise
 						obj.HandleSignal(Signal);
 				end
@@ -128,7 +128,7 @@ classdef ExperimentWorker<handle
 				obj.SignalHandler=@obj.RunningHandler;
 				obj.Serial.configureCallback("byte",1,@obj.SerialCallback);
 			else
-				Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+				Gbec.Exceptions.Unexpected_response_from_Arduino.Throw;
 			end
 		end
 		function SerialCallback(obj,~,~)
@@ -151,7 +151,7 @@ classdef ExperimentWorker<handle
 		end
 		function HandleSignal(obj,Signal)
 			if isempty(obj.SignalHandler)
-				Gbec.GbecException.Unexpected_response_from_Arduino.Throw;
+				Gbec.Exceptions.Unexpected_response_from_Arduino.Throw;
 			else
 				obj.SignalHandler(Signal);
 			end
@@ -219,9 +219,9 @@ classdef ExperimentWorker<handle
 						disp('测试结束');
 						break;
 					case UID.Signal_NoLastTest
-						Gbec.GbecException.Last_test_not_running_or_unstoppable.Throw;
+						Gbec.Exceptions.Last_test_not_running_or_unstoppable.Throw;
 					case UID.Signal_NoSuchTest
-						Gbec.GbecException.Test_not_found_on_Arduino.Throw;
+						Gbec.Exceptions.Test_not_found_on_Arduino.Throw;
 					otherwise
 						obj.HandleSignal(Signal)
 				end
@@ -230,17 +230,17 @@ classdef ExperimentWorker<handle
 		function PauseSession(obj)
 			%暂停会话
 			import Gbec.UID
-			import Gbec.GbecException
+			import Gbec.Exceptions
 			obj.FeedDog;
 			if obj.State==UID.State_SessionRestored||obj.State==UID.State_SessionPaused
-				GbecException.Cannot_pause_a_paused_session.Throw;
+				Exceptions.Cannot_pause_a_paused_session.Throw;
 			end
 			obj.ApiCall(UID.API_Pause);
 			while true
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
-						GbecException.No_sessions_are_running.Throw;
+						Exceptions.No_sessions_are_running.Throw;
 					case UID.State_SessionPaused
 						obj.EventRecorder.LogEvent(UID.State_SessionPaused);
 						disp('会话暂停');
@@ -249,9 +249,9 @@ classdef ExperimentWorker<handle
 						obj.State=UID.State_SessionPaused;
 						break;
 					case UID.State_SessionAborted
-						GbecException.Cannot_pause_an_aborted_session.Throw;
+						Exceptions.Cannot_pause_an_aborted_session.Throw;
 					case UID.State_SessionFinished
-						GbecException.Cannot_pause_a_finished_session.Throw;
+						Exceptions.Cannot_pause_a_finished_session.Throw;
 					otherwise
 						obj.HandleSignal(Signal);
 				end
@@ -260,34 +260,34 @@ classdef ExperimentWorker<handle
 		function AbortSession(obj)
 			%放弃会话
 			import Gbec.UID
-			import Gbec.GbecException
+			import Gbec.Exceptions
 			obj.FeedDog;
 			switch obj.State
 				case UID.State_SessionRestored
 					obj.AbortAndSave;
 				case UID.State_SessionAborted
-					GbecException.Cannot_abort_an_aborted_session.Throw;
+					Exceptions.Cannot_abort_an_aborted_session.Throw;
 				otherwise
 					try
 						obj.ApiCall(UID.API_Abort);
 					catch ME
 						if ME.identifier=="MATLAB:class:InvalidHandle"
 							obj.State=UID.State_SessionInvalid;
-							Gbec.GbecException.Serialport_disconnected.Throw('串口已断开，请重新初始化');
+							Gbec.Exceptions.Serialport_disconnected.Throw('串口已断开，请重新初始化');
 						end
 					end
 					while true
 						Signal=obj.WaitForSignal;
 						switch Signal
 							case UID.State_SessionInvalid
-								GbecException.No_sessions_are_running.Throw;
+								Exceptions.No_sessions_are_running.Throw;
 							case UID.State_SessionAborted
 								obj.Serial.configureCallback('off');
 								obj.SignalHandler=function_handle.empty;
 								obj.AbortAndSave;%这个函数调用包含了启用看门狗
 								break;
 							case UID.State_SessionFinished
-								GbecException.Cannot_abort_a_finished_session.Throw;
+								Exceptions.Cannot_abort_a_finished_session.Throw;
 								%异常信号应该直接忽略
 						end
 					end
@@ -335,7 +335,7 @@ classdef ExperimentWorker<handle
 				Signal=obj.WaitForSignal;
 				switch Signal
 					case UID.State_SessionInvalid
-						Gbec.GbecException.Must_run_session_before_getting_information.Throw;
+						Gbec.Exceptions.Must_run_session_before_getting_information.Throw;
 					case UID.Signal_InfoStart
 						Information=CollectStruct(obj.Serial);
 						if ~isempty(obj.HostAction)
@@ -343,7 +343,7 @@ classdef ExperimentWorker<handle
 						end
 						break;
 					case UID.State_SessionRunning
-						Gbec.GbecException.Cannot_get_information_while_session_running.Throw;
+						Gbec.Exceptions.Cannot_get_information_while_session_running.Throw;
 					otherwise
 						obj.HandleSignal(Signal);
 				end

@@ -1,6 +1,6 @@
 function InterruptRetry(obj,~,~)
 import Gbec.UID
-import Gbec.GbecException
+import Gbec.Exceptions
 RunningOrPaused=obj.State==UID.State_SessionRunning||obj.State==UID.State_SessionPaused;
 if RunningOrPaused
 	obj.EventRecorder.LogEvent(UID.Event_SerialInterrupt);
@@ -21,7 +21,7 @@ for a=1:obj.MaxRetryTimes
 	end
 end
 if ReconnectFail
-	GbecException.Disconnection_reconnection_failed.Throw;
+	Exceptions.Disconnection_reconnection_failed.Throw;
 end
 disp("重新连接成功");
 if RunningOrPaused

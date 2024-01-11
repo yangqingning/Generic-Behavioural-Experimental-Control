@@ -35,7 +35,7 @@ switch Signal
 		obj.WatchDog.start;
 	case UID.Signal_StartRecord
 		if isempty(obj.VideoInput)
-			Gbec.GbecException.Cannot_record_without_VideoInput.Throw;
+			Gbec.Exceptions.Cannot_record_without_VideoInput.Throw;
 		else
 			if obj.VideoInput.Logging=="off"
 				trigger(obj.VideoInput);
@@ -43,7 +43,7 @@ switch Signal
 		end
 	case UID.Signal_HostAction
 		if isempty(obj.HostAction)
-			Gbec.GbecException.Arduino_requires_undefined_HostAction.Throw;
+			Gbec.Exceptions.Arduino_requires_undefined_HostAction.Throw;
 		else
 			obj.HostAction.Run(obj.Serial,obj.EventRecorder);
 		end
