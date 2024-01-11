@@ -1,4 +1,4 @@
-classdef GbecException<MATLAB.Lang.IEnumerableException
+classdef Exceptions<MATLAB.Lang.IEnumerableException
 	enumeration
 		Serial_handshake_failed
 		Test_not_found_on_Arduino

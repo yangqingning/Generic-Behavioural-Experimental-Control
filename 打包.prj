@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\工具箱打包.prj" location="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制" name="工具箱打包" target="target.toolbox" target-name="打包为工具箱">
+  <configuration build-checksum="1434849013" file="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制\打包.prj" location="C:\Users\vhtmf\Documents\MATLAB\通用行为实验控制" name="打包" target="target.toolbox" target-name="打包为工具箱">
     <param.appname>通用行为实验控制</param.appname>
     <param.authnamewatermark>张天夫</param.authnamewatermark>
     <param.email>vhtmfu@outlook.com</param.email>
@@ -21,7 +21,7 @@ MATLAB工具箱并不能将MATLAB代码编译成Arduino二进制代码，而是�
 随时暂停、放弃实验，不需要拔插头；
 实验过程中意外掉线自动重连，不会丢失进度</param.description>
     <param.screenshot>${PROJECT_ROOT}\工具箱图像.png</param.screenshot>
-    <param.version>6.0.0</param.version>
+    <param.version>6.1.0</param.version>
     <param.output>${PROJECT_ROOT}\通用行为实验控制.mltbx</param.output>
     <param.products.name>
       <item>Image Acquisition Toolbox</item>
@@ -30,7 +30,7 @@ MATLAB工具箱并不能将MATLAB代码编译成Arduino二进制代码，而是�
       <item>78</item>
     </param.products.id>
     <param.products.version>
-      <item>6.7.1</item>
+      <item>24.1</item>
     </param.products.version>
     <param.platforms />
     <param.guid>f71ce85b-534c-47de-8ccf-50d6a66605a3</param.guid>
@@ -74,7 +74,7 @@ Debug.mlx</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="17.3.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(3)</requiredAddOn>
+        <requiredAddOn earliest="18.1.0" fromRepository="true" id="b344599a-983e-4a6c-bd99-ed3a1bdd9626" include="true" latest="latest">埃博拉酱 的 MATLAB 扩展 Extension(3)</requiredAddOn>
         <requiredAddOn earliest="1.0.2.0" fromRepository="true" id="85f2e628-cb9d-426b-b596-0a88b613d14f" include="true" latest="latest">埃博拉酱的文本分析工具箱</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
@@ -138,7 +138,7 @@ Debug.mlx</param.exclude.filters>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2023b</root>
+      <root>C:\Program Files\MATLAB\R2024a</root>
       <toolboxes />
     </matlab>
     <platform>
