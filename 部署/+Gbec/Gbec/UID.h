@@ -129,6 +129,8 @@ enum UID : uint8_t {
   Test_CapacitorMonitor,
   Test_SquareWave,
   Test_RandomFlash,
+  Test_HighTone,
+  Test_LowTone,
 
   // 步骤UID
 
@@ -153,6 +155,7 @@ enum UID : uint8_t {
   Step_SquareWave,
   Step_RandomFlash,
   Step_PreciseLog,
+  Step_PinLow,
 
   // 回合UID
 
@@ -170,6 +173,8 @@ enum UID : uint8_t {
   Trial_HFImage,
   Trial_RandomImage,
   Trial_RandomFlash,
+  Trial_LowTone,
+  Trial_HighTone,
 
   // 会话UID
 
@@ -183,4 +188,5 @@ enum UID : uint8_t {
   Session_HLFImage,
   Session_RandomImage,
   Session_RandomFlash,
+  Session_HighLowTone,
 };

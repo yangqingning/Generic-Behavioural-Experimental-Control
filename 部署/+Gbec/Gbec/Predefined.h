@@ -192,6 +192,20 @@ struct SquareWaveTest : public ITest {
     return true;
   }
 };
+// 测试具有指定高电平和低电平毫秒数和循环次数的方波
+template<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t FrequencyHz, uint16_t Milliseconds>
+struct ToneTest : public ITest {
+  constexpr ToneTest()
+    : ITest(TMyUID) {}
+  bool Start(uint16_t TestTimes) const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+    TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, DigitalWrite<Pin, LOW>>(Milliseconds * TestTimes);
+    return true;
+  }
+};
 template<typename T>
 constexpr T Instance;
 template<typename... Ts>
@@ -549,7 +563,7 @@ template<uint8_t Pin, uint8_t TimerCode, uint16_t FrequencyHz, uint16_t Millisec
 struct ToneStep : public IStep {
   bool Start(void (*)()) const override {
     Report<UpReporter>();
-    TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, Milliseconds, Report<DownReporter>>();
+    TimersOneForAll::PlayTone<TimerCode, Pin, FrequencyHz, Milliseconds, DoneCallback>();
     return false;
   }
   void Setup() const override {
@@ -561,6 +575,12 @@ struct ToneStep : public IStep {
     Instance<DownReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_FrequencyHz, FrequencyHz, Info_Milliseconds, Milliseconds);
+  protected:
+  static void DoneCallback()
+  {
+    DigitalWrite<Pin,LOW>();
+    Report<DownReporter>();
+  }
 };
 // 播放具有指定高电平和低电平毫秒数的方波。异步执行，步骤不阻塞时相。
 template<uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t NumCycles, typename UpReporter = NullStep, typename DownReporter = NullStep, UID MyUID = Step_SquareWave>

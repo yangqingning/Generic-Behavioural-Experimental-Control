@@ -5,7 +5,7 @@
 /* 引脚设置。建议遵守命名规范：p开头表示名称指向一个引脚号（Pin）
 可以使用预处理指令配置多个不同设备的不同引脚号
 */
-#define BOX 3
+#define BOX 1
 #if BOX == 1
 Pin pCD1 = 9;
 Pin pBlueLed = 11;
@@ -14,7 +14,7 @@ Pin pWaterPump = 2;
 Pin pAirPuff = 7;
 Pin pCapacitorVdd = 7;
 Pin pCapacitorOut = 18;
-Pin pPassiveBuzzer = 25;
+Pin pPassiveBuzzer = 6;
 Pin pLaser = 4;
 #elif BOX == 2
 Pin pCD1 = 9;
@@ -95,7 +95,9 @@ const auto &TestMap = TestMap_t<
   PinFlashTest<Test_CapacitorReset, pCapacitorVdd, 1, 100, LOW>,
   MonitorTest<Test_CapacitorMonitor, pCapacitorOut>,
   SquareWaveTest<Test_SquareWave, pBlueLed, 3, 2000, 1000, 10>,
-  RandomFlashTest<Test_RandomFlash, pBlueLed, 3, 4000, 8000, 30, 300>>;
+  RandomFlashTest<Test_RandomFlash, pBlueLed, 3, 4000, 8000, 30, 300>,
+  ToneTest<Test_LowTone, pPassiveBuzzer, 4, 500, 1000>,
+  ToneTest<Test_HighTone, pPassiveBuzzer, 4, 5000, 1000>>;
 
 // 步骤设计。建议StepName遵守命名规范：s开头表示名称指向一个步骤（Step）
 
@@ -271,6 +273,8 @@ using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay,
 using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
 using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
 using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
+using tLowTone = Trial<Trial_LowTone, sFixedPrepare, sLowTone>;
+using tHighTone = Trial<Trial_HighTone, sFixedPrepare, sHighTone>;
 
 const auto &SessionMap = SessionMap_t<
   /*会话设计
@@ -292,4 +296,5 @@ const auto &SessionMap = SessionMap_t<
   //此会话要求主机端配置能根据串口指示显示高低频图像的HostAction
   Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>,
   Session<Session_RandomImage, false, tRandomImage, N<100>>,
-  Session<Session_RandomFlash, false, tRandomFlash, N<3>>>;
+  Session<Session_RandomFlash, false, tRandomFlash, N<3>>,
+  Session<Session_HighLowTone, true, tLowTone, N<30>, tHighTone, N<30>>>;
