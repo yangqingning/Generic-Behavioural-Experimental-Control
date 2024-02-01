@@ -9,7 +9,7 @@
 #if BOX == 1
 Pin pCD1 = 9;
 Pin pBlueLed = 11;
-Pin pActiveBuzzer = 52;
+Pin pActiveBuzzer = 6;
 Pin pWaterPump = 2;
 Pin pAirPuff = 7;
 Pin pCapacitorVdd = 7;
@@ -216,7 +216,7 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
 using sLowTone = ToneStep<pPassiveBuzzer, 3, 500, 200, S<Signal_LowUp>, S<Signal_LowDown>, Step_LowTone>;
-using sHighTone = ToneStep<pPassiveBuzzer, 3, 5000, 200, S<Signal_HighUp>, S<Signal_LowDown>, Step_HighTone>;
+using sHighTone = ToneStep<pPassiveBuzzer, 3, 5000, 200, S<Signal_HighUp>, S<Signal_HighDown>, Step_HighTone>;
 
 /*精确记录类步骤
 
@@ -273,8 +273,8 @@ using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay,
 using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
 using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
 using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
-using tLowTone = Trial<Trial_LowTone, sFixedPrepare, sLowTone>;
-using tHighTone = Trial<Trial_HighTone, sFixedPrepare, sHighTone>;
+using tLowTone = Trial<Trial_LowTone, sLowTone, sFixedPrepare>;
+using tHighTone = Trial<Trial_HighTone, sHighTone, sFixedPrepare>;
 
 const auto &SessionMap = SessionMap_t<
   /*会话设计

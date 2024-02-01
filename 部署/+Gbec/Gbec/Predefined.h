@@ -575,10 +575,9 @@ struct ToneStep : public IStep {
     Instance<DownReporter>.Setup();
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_FrequencyHz, FrequencyHz, Info_Milliseconds, Milliseconds);
-  protected:
-  static void DoneCallback()
-  {
-    DigitalWrite<Pin,LOW>();
+protected:
+  static void DoneCallback() {
+    DigitalWrite<Pin, LOW>();
     Report<DownReporter>();
   }
 };

@@ -151,7 +151,8 @@ classdef ExperimentWorker<handle
 		end
 		function HandleSignal(obj,Signal)
 			if isempty(obj.SignalHandler)
-				Gbec.Exceptions.Unexpected_response_from_Arduino.Throw;
+				% Gbec.Exceptions.Unexpected_response_from_Arduino.Throw;
+				disp(Gbec.UID(Signal));
 			else
 				obj.SignalHandler(Signal);
 			end
