@@ -18,19 +18,22 @@ switch Signal
 		if TrialMod==1&&TrialIndex>1
 			cprintf([1,0,1],'\n已过%u回合，请检查实验状态',TrialIndex-1);
 		end
-		fprintf('\n回合%u-%s：',TrialIndex,TrialUID);
+		FprintfInCommandWindow('\n回合%u-%s：',TrialIndex,TrialUID);
 	case UID.State_SessionFinished
 		if ~isempty(obj.VideoInput)
 			stop(obj.VideoInput);
 		end
-		fprintf('\n会话完成\n');
+		FprintfInCommandWindow('\n会话完成\n');
+
+		obj.Serial.configureCallback('off');
+		warning off MATLAB:callback:DynamicPropertyEventError
+		%先关中断，以免与信息冲突。关中断可能会让已经产生的中断出错，这是MATLAB自身设计逻辑缺陷，不应当由用户负责处理，且不影响程序逻辑，可以直接忽略
 		if obj.SaveFile
 			obj.SaveInformation;
 		else
-			fprintf(" 数据未保存");
+			FprintfInCommandWindow(" 数据未保存");
 		end
-		fprintf('\n');
-		obj.Serial.configureCallback('off');
+
 		obj.State=UID.State_SessionFinished;
 		obj.WatchDog.start;
 	case UID.Signal_StartRecord
@@ -55,11 +58,11 @@ switch Signal
 		end
 		obj.TimeOffset=Time-seconds(toc(obj.TIC));
 		obj.PreciseRecorder.PushBack(struct(Time=Time,Event=Event));
-		fprintf('%s（%s）',Gbec.LogTranslate(Event),Time);
+		FprintfInCommandWindow('%s（%s）',Gbec.LogTranslate(Event),Time);
 	otherwise
 		%为了与TrialUID保持一致，这里也记录UID而不是字符串
 		obj.EventRecorder.LogEvent(UID(Signal));
-		fprintf(' %s',Gbec.LogTranslate(Signal));
+		FprintfInCommandWindow(' %s',Gbec.LogTranslate(Signal));
 end
 end
 function SendMiao(Note,HttpRetryTimes,MiaoCode)
@@ -76,5 +79,12 @@ for a=0:HttpRetryTimes
 		end
 	end
 	break;
+end
+end
+function FprintfInCommandWindow(varargin)
+if feature('SuppressCommandLineOutput')
+	timer(StartDelay=0.1,TimerFcn=@(~,~)fprintf(varargin{:})).start;
+else
+	fprintf(varargin{:});
 end
 end

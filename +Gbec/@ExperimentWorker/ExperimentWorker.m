@@ -293,6 +293,7 @@ classdef ExperimentWorker<handle
 								obj.AbortAndSave;%这个函数调用包含了启用看门狗
 								break;
 							case UID.State_SessionFinished
+								obj.State=UID.State_SessionFinished;
 								Exceptions.Cannot_abort_a_finished_session.Throw;
 								%异常信号应该直接忽略
 						end
