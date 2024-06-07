@@ -115,6 +115,8 @@ enum UID : uint8_t {
   Signal_Laser,
   Signal_Image,
   Signal_PreciseLog,
+  Signal_FlashUp,
+  Signal_FlashDown,
 
   // 测试UID
 
@@ -129,6 +131,7 @@ enum UID : uint8_t {
   Test_CapacitorMonitor,
   Test_SquareWave,
   Test_RandomFlash,
+  Test_InterfereFlash,
   Test_HighTone,
   Test_LowTone,
 
@@ -154,6 +157,7 @@ enum UID : uint8_t {
   Step_Air,
   Step_SquareWave,
   Step_RandomFlash,
+  Step_InterfereFlash,
   Step_PreciseLog,
   Step_PinLow,
 
@@ -173,6 +177,7 @@ enum UID : uint8_t {
   Trial_HFImage,
   Trial_RandomImage,
   Trial_RandomFlash,
+  Trial_InterfereRandomFlash,
   Trial_LowTone,
   Trial_HighTone,
 
@@ -187,6 +192,7 @@ enum UID : uint8_t {
   Session_SurveillanceThroughout,
   Session_HLFImage,
   Session_RandomImage,
+  Session_InterfereRandomFlash,
   Session_RandomFlash,
   Session_HighLowTone,
 };

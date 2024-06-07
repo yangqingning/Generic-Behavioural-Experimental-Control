@@ -16,6 +16,7 @@ Pin pCapacitorVdd = 7;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 6;
 Pin pLaser = 4;
+Pin pFlash = 42;//。
 #elif BOX == 2
 Pin pCD1 = 9;
 Pin pBlueLed = 8;
@@ -96,6 +97,7 @@ const auto &TestMap = TestMap_t<
   MonitorTest<Test_CapacitorMonitor, pCapacitorOut>,
   SquareWaveTest<Test_SquareWave, pBlueLed, 3, 2000, 1000, 10>,
   RandomFlashTest<Test_RandomFlash, pBlueLed, 3, 4000, 8000, 30, 300>,
+ /* InterfereFlashTest<Test_InterfereFlash, pFlash, 0,30, 300>,*/
   ToneTest<Test_LowTone, pPassiveBuzzer, 4, 500, 1000>,
   ToneTest<Test_HighTone, pPassiveBuzzer, 4, 5000, 1000>>;
 
@@ -249,6 +251,19 @@ MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 
 using sRandomFlash = RandomFlashStep<pBlueLed, 3, 1000, 1000, 10, 100>;
+/*随机闪烁干扰类步骤
+此步骤在指定引脚上产生随机的高低电平闪烁。需要指定高低电平各自的总时长，以及每个闪烁周期的随机范围。
+using StepName = RandomFlashStep<uint8_t Pin,uint8_t TimerCode,uint16_t RandomCycleMin,uint16_t RandomCycleMax,typename UpReporter = NullStep, typename DownReporter = NullStep, bool ReportEachCycle = false, UID MyUID = Step_RandomFlash>
+参数：
+Pin，要闪烁的引脚
+TimerCode，要使用的计时器
+RandomCycleMin，一个随机高低电平周期的最短毫秒数
+RandomCycleMax，一个随机高低电平周期的最长毫秒数
+UpReporter,DownReporter，提醒闪烁开始和结束的汇报器。
+ReportEachCycle，是否每个循环都触发汇报器。若true，则每次高电平前触发UpReporter，每次高电平后触发DownReporter；若false，只有第一次高电平前触发UpReporter，最后一次高电平后触发DownReporter。
+MyUID，标识该步骤的UID，在返回信息时供人类识别
+*/
+using sInterfereRandomFlash = InterfereRandomFlashStep<pFlash,0,30,300,S<Signal_FlashUp>,S<Signal_FlashDown>,false,Step_InterfereFlash>;
 
 /*回合设计。
 一个回合由多个步骤串联而成。语法：
@@ -271,6 +286,7 @@ using tAudioWater = Trial<Trial_AudioWater, sCalmDown, sAudio, sTag, sMonitorLic
 using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sLight, sDelay, sAir, sRandomITI>;
 using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
 using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
+using tInterfereRandomFlash = Trial<Trial_InterfereRandomFlash,sInterfereRandomFlash>;
 using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
 using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
 using tLowTone = Trial<Trial_LowTone, sLowTone, sFixedPrepare>;
@@ -297,4 +313,5 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_HLFImage, true, tLFImage, N<30>, tHFImage, N<30>>,
   Session<Session_RandomImage, false, tRandomImage, N<100>>,
   Session<Session_RandomFlash, false, tRandomFlash, N<3>>,
+  Session<Session_InterfereRandomFlash, false, tInterfereRandomFlash, N<30>>,
   Session<Session_HighLowTone, true, tLowTone, N<30>, tHighTone, N<30>>>;

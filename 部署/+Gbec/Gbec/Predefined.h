@@ -127,6 +127,19 @@ void PopulateRandomCycles(uint8_t Times = 1) {
   CurrentCycle<TimerCode> = FlashCycles<TimerCode>.cbegin();
   CycleEnd<TimerCode> = FlashCycles<TimerCode>.cend();
 }
+template<uint8_t TimerCode, uint16_t RandomMin, uint16_t RandomMax>
+void InterfereFlash(uint16_t RandomCycleMin, uint16_t RandomCycleMax, uint8_t Times = 1) {
+  FlashCycles<TimerCode>.clear();
+  uint16_t MillisecondsLeft = 0;
+  for (uint8_t i = 0; i < Times; ++i) {
+    uint16_t RandomCycle = random(RandomCycleMin, RandomCycleMax + 1);
+    MillisecondsLeft += RandomCycle;
+    FlashCycles<TimerCode>.push_back(RandomCycle);
+  }
+  CurrentCycle<TimerCode> = FlashCycles<TimerCode>.cbegin();
+  CycleEnd<TimerCode> = FlashCycles<TimerCode>.cend();
+}
+
 // 给引脚一段时间的高或低电平，然后反转
 template<UID TMyUID, uint8_t Pin, uint8_t TimerCode, uint16_t HighMilliseconds, uint16_t LowMilliseconds, uint16_t RandomCycleMin, uint16_t RandomCycleMax>
 struct RandomFlashTest : public ITest {
@@ -143,6 +156,7 @@ struct RandomFlashTest : public ITest {
     }
     return true;
   }
+
 protected:
   static void SetHigh() {
     if (CurrentCycle<TimerCode> < CycleEnd<TimerCode>) {
@@ -418,6 +432,47 @@ public:
   }
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_HighMilliseconds, HighMilliseconds, Info_LowMilliseconds, LowMilliseconds, Info_RandomCycleMin, RandomCycleMin, Info_RandomCycleMax, RandomCycleMax);
 };
+// 在实验全程随机闪烁引脚。不指定高电平和低电平总时长，仅指定每次闪烁的随机范围。
+template<uint8_t Pin, uint8_t TimerCode, uint16_t RandomCycleMin, uint16_t RandomCycleMax, typename UpReporter = NullStep, typename DownReporter = NullStep, bool ReportEachCycle = false, UID MyUID = Step_InterfereFlash>
+class InterfereRandomFlashStep : public IStep {
+  static void SetHigh() {
+    if (RandomCycleMin < RandomCycleMax) {
+      uint16_t randomCycle = random(RandomCycleMin, RandomCycleMax);
+      if (ReportEachCycle)
+        Report<UpReporter>();
+      DigitalWrite<Pin, HIGH>();
+      TimersOneForAll::DoAfter<TimerCode>(randomCycle, SetLow);
+    }
+  }
+
+  static void SetLow() {
+    if (ReportEachCycle)
+      Report<DownReporter>();
+    DigitalWrite<Pin, LOW>();
+    TimersOneForAll::DoAfter<TimerCode>(random(RandomCycleMin, RandomCycleMax), SetHigh);
+  }
+
+public:
+  bool Start(void (*FC)()) const override {
+    if (!ReportEachCycle)
+      Report<UpReporter>();
+    InterfereFlash<TimerCode, RandomCycleMin, RandomCycleMax>(RandomCycleMin, RandomCycleMax);
+    SetHigh();
+    return false;
+  }
+
+  void Setup() const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+    Instance<UpReporter>.Setup();
+    Instance<DownReporter>.Setup();
+  }
+
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_RandomCycleMin, RandomCycleMin, Info_RandomCycleMax, RandomCycleMax);
+};
+
 // 在一段时间内同步监视引脚，发现高电平立即汇报。HitReporter和MissReporter都是IStep类型，一律异步执行，不等待
 template<uint8_t Pin, uint8_t TimerCode, uint16_t Milliseconds, uint8_t Flags, typename HitReporter, typename MissReporter = NullStep, UID MyUID = Step_Monitor>
 class MonitorStep : public IStep {
