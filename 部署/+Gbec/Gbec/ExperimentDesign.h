@@ -8,7 +8,7 @@
 #define BOX 1
 #if BOX == 1
 Pin pCD1 = 9;
-Pin pBlueLed = 11;
+Pin pBlueLed = 12;
 Pin pActiveBuzzer = 6;
 Pin pWaterPump = 2;
 Pin pAirPuff = 7;
@@ -16,7 +16,7 @@ Pin pCapacitorVdd = 7;
 Pin pCapacitorOut = 18;
 Pin pPassiveBuzzer = 6;
 Pin pLaser = 4;
-Pin pFlash = 42;//。
+Pin pFlash = 53;//。
 #elif BOX == 2
 Pin pCD1 = 9;
 Pin pBlueLed = 8;
@@ -264,7 +264,10 @@ ReportEachCycle，是否每个循环都触发汇报器。若true，则每次高�
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
 using sInterfereRandomFlash = InterfereRandomFlashStep<pFlash,0,30,300,S<Signal_FlashUp>,S<Signal_FlashDown>,false,Step_InterfereFlash>;
-
+// 开始闪烁干扰步骤
+using sInterfereFlashStart = InterfereFlashStartStep<pFlash, 0, 30, 300, Step_InterfereFlashStart>;
+// 停止闪烁干扰步骤
+using sInterfereFlashStop = InterfereFlashStopStep<pFlash,0,Step_InterfereFlashStop>;
 /*回合设计。
 一个回合由多个步骤串联而成。语法：
 using TrialName=Trial<MyUID,Step1,Step2,…>;
@@ -287,6 +290,8 @@ using tLightAir = Trial<Trial_LightAir, S<Signal_StartRecord>, sFixedPrepare, sL
 using tLightDelayWater = Trial<Trial_LightDelayWater, sCalmDown, sLight, sDelay, sResponseWindow>;
 using tRandomFlash = Trial<Trial_RandomFlash, sCalmDown, sLog, sRandomFlash, sMonitorLick>;
 using tInterfereRandomFlash = Trial<Trial_InterfereRandomFlash,sInterfereRandomFlash>;
+using tInterfereFlashStart = Trial<Trial_InterfereFlashStart,sInterfereFlashStart>;
+using tInterfereFlashStop = Trial<Trial_InterfereFlashStop,sInterfereFlashStop>;
 using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
 using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
 using tLowTone = Trial<Trial_LowTone, sLowTone, sFixedPrepare>;
@@ -314,4 +319,5 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_RandomImage, false, tRandomImage, N<100>>,
   Session<Session_RandomFlash, false, tRandomFlash, N<3>>,
   Session<Session_InterfereRandomFlash, false, tInterfereRandomFlash, N<30>>,
+   Session<Session_InterfereFlash, false, tInterfereFlashStart, N<1>,tLightOnly, N<1>,tInterfereFlashStop, N<1>>,
   Session<Session_HighLowTone, true, tLowTone, N<30>, tHighTone, N<30>>>;

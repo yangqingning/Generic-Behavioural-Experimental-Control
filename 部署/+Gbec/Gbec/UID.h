@@ -5,7 +5,8 @@
 编辑此列表时应当注意类别分区。除了零元和纯枚举类以外，其它类区应当以0起始。同类UID应当连续放置以节约内存。
 已定义值的枚举必须全部罗列在列表开头，否则无法自动生成MATLAB枚举类。
 */
-enum UID : uint8_t {
+enum UID : uint8_t
+{
   // 监视旗帜，可用按位或|进行组合
 
   // 只汇报一次
@@ -27,7 +28,7 @@ enum UID : uint8_t {
   API_TestStop,
   API_IsReady,
 
-  //特殊事件
+  // 特殊事件
 
   Event_SerialInterrupt,
   Event_SerialReconnect,
@@ -68,14 +69,14 @@ enum UID : uint8_t {
   Info_RandomCycleMax,
   Info_Event,
 
-  //状态
+  // 状态
 
   State_SessionInvalid,
   State_SessionRunning,
   State_SessionPaused,
   State_SessionAborted,
   State_SessionFinished,
-  //此状态仅限MATLAB端使用，指刚恢复连接，但处于暂停状态
+  // 此状态仅限MATLAB端使用，指刚恢复连接，但处于暂停状态
   State_SessionRestored,
 
   // 信号UID
@@ -120,7 +121,7 @@ enum UID : uint8_t {
 
   // 测试UID
 
-  //指代上一个运行的测试
+  // 指代上一个运行的测试
   Test_Last,
   Test_CD1,
   Test_BlueLed,
@@ -158,6 +159,8 @@ enum UID : uint8_t {
   Step_SquareWave,
   Step_RandomFlash,
   Step_InterfereFlash,
+  Step_InterfereFlashStart,
+  Step_InterfereFlashStop,
   Step_PreciseLog,
   Step_PinLow,
 
@@ -178,12 +181,14 @@ enum UID : uint8_t {
   Trial_RandomImage,
   Trial_RandomFlash,
   Trial_InterfereRandomFlash,
+  Trial_InterfereFlashStart,
+ Trial_InterfereFlashStop, 
   Trial_LowTone,
   Trial_HighTone,
 
   // 会话UID
 
-  Session_Current,//内部使用，请勿修改
+  Session_Current, // 内部使用，请勿修改
   Session_LAWLwAw,
   Session_LAWLw,
   Session_LightWater,
@@ -193,6 +198,7 @@ enum UID : uint8_t {
   Session_HLFImage,
   Session_RandomImage,
   Session_InterfereRandomFlash,
+  Session_InterfereFlash,
   Session_RandomFlash,
   Session_HighLowTone,
 };

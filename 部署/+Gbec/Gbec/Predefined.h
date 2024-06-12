@@ -587,6 +587,45 @@ struct StopMonitorStep : public IStep {
   static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_Reporter, Reporter::Info);
   // 此类不需要Setup，初始化应由与其配对的StartMonitorStep负责
 };
+
+// 开始引脚闪烁，异步执行直到InterfereFlashStopStep结束闪烁
+template<uint8_t Pin, uint8_t TimerCode, uint16_t RandomCycleMin, uint16_t RandomCycleMax, UID MyUID = Step_InterfereFlashStart>
+struct InterfereFlashStartStep : public IStep {
+  static void SetHigh() {
+    uint16_t randomCycle = random(RandomCycleMin, RandomCycleMax);
+    DigitalWrite<Pin, HIGH>();
+    TimersOneForAll::DoAfter<TimerCode>(randomCycle, SetLow);
+  }
+  static void SetLow() {
+    DigitalWrite<Pin, LOW>();
+    TimersOneForAll::DoAfter<TimerCode>(random(RandomCycleMin, RandomCycleMax), SetHigh);
+  }
+public:
+  bool Start(void (*FC)()) const override {
+    InterfereRandomFlashStep<Pin, TimerCode, RandomCycleMin, RandomCycleMax, NullStep, NullStep, false, MyUID>().Start(nullptr);
+    SetHigh();
+    return false;
+  }
+  void Setup() const override {
+    if (NeedSetup<Pin>) {
+      pinMode(Pin, OUTPUT);
+      NeedSetup<Pin> = false;
+    }
+  }
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin, Info_RandomCycleMin, RandomCycleMin, Info_RandomCycleMax, RandomCycleMax);
+};
+// 结束引脚闪烁
+template<uint8_t Pin,uint8_t TimerCode, UID MyUID = Step_InterfereFlashStop>
+struct InterfereFlashStopStep : public IStep {
+ bool Start(void (*FC)()) const override {
+     TimersOneForAll::ShutDown<TimerCode>(); 
+     return false;
+  }
+  void Setup() const override {
+    // No setup needed
+  } 
+  static constexpr auto Info = InfoStruct(Info_UID, MyUID, Info_Pin, Pin);
+};
 // 向串口写出一个字节
 template<UID ToWrite, UID MyUID = Step_SerialWrite>
 struct SerialWriteStep : public IStep {
