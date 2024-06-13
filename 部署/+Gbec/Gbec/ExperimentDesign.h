@@ -145,6 +145,7 @@ using sWater = PinFlashStep<pWaterPump, 3, 100, S<Signal_WaterOffered>, NullStep
 using sAir = PinFlashStep<pAirPuff, 3, 150, S<Signal_AirPuff>, NullStep, Step_Air>;
 using sTag = PinFlashStep<pCD1, 4, 200, NullStep, NullStep, Step_Tag>;
 using sSquareWave = SquareWaveStep<pLaser, 3, 30, 30, 30, S<Signal_Laser>, NullStep, Step_SquareWave>;
+using sOptogenetic = PinFlashStep<pLaser, 4, 2000, S<Signal_LaserUp>, S<Signal_LaserDown>, Step_Optogenetic>;
 
 /*监视类步骤
 
@@ -249,7 +250,7 @@ UpReporter,DownReporter，提醒闪烁开始和结束的汇报器。
 ReportEachCycle，是否每个循环都触发汇报器。若true，则每次高电平前触发UpReporter，每次高电平后触发DownReporter；若false，只有第一次高电平前触发UpReporter，最后一次高电平后触发DownReporter。
 MyUID，标识该步骤的UID，在返回信息时供人类识别
 */
-
+using sRandomOptogenetic = RandomFlashStep<pLaser, 4, 1000, 1000, 100, 200,S<Signal_LaserUp>,S<Signal_LaserDown>,false,Step_RandomOptogenetic>;
 using sRandomFlash = RandomFlashStep<pBlueLed, 3, 1000, 1000, 10, 100>;
 /*随机闪烁干扰类步骤
 此步骤在指定引脚上产生随机的高低电平闪烁。需要指定高低电平各自的总时长，以及每个闪烁周期的随机范围。
@@ -296,6 +297,8 @@ using tStartMonitor = Trial<Trial_StartMonitor, sStartMonitor>;
 using tStopMonitor = Trial<Trial_StopMonitor, sStopMonitor>;
 using tLowTone = Trial<Trial_LowTone, sLowTone, sFixedPrepare>;
 using tHighTone = Trial<Trial_HighTone, sHighTone, sFixedPrepare>;
+using tOptogeneticLightWater = Trial<Trial_OptogeneticLightWater, sCalmDown, sOptogenetic, sDelay, sLight, sResponseWindow, sFixedITI>;
+using tRandomOptogeneticLightWater = Trial<Trial_RandomOptogeneticLightWater, sCalmDown, sRandomOptogenetic, sDelay, sLight, sResponseWindow, sFixedITI>;
 
 const auto &SessionMap = SessionMap_t<
   /*会话设计
@@ -319,5 +322,7 @@ const auto &SessionMap = SessionMap_t<
   Session<Session_RandomImage, false, tRandomImage, N<100>>,
   Session<Session_RandomFlash, false, tRandomFlash, N<3>>,
   Session<Session_InterfereRandomFlash, false, tInterfereRandomFlash, N<30>>,
-   Session<Session_InterfereFlash, false, tInterfereFlashStart, N<1>,tLightOnly, N<1>,tInterfereFlashStop, N<1>>,
+  Session<Session_InterfereFlash, false, tInterfereFlashStart, N<1>,tLightOnly, N<1>,tInterfereFlashStop, N<1>>,
+  Session<Session_OptogeneticLightWaterW, false, tStartMonitor, N<1>, tLightWater, N<10>, tOptogeneticLightWater, N<10>, tLightWater, N<10>, tOptogeneticLightWater, N<10>, tStopMonitor, N<1>>,
+  Session<Session_RandomOptogeneticLightWaterW, false, tStartMonitor, N<1>, tInterfereFlashStart, N<1>,tLightWater, N<10>, tRandomOptogeneticLightWater, N<10>, tLightWater, N<10>, tRandomOptogeneticLightWater, N<10>,tInterfereFlashStop, N<1>, tStopMonitor, N<1>>,
   Session<Session_HighLowTone, true, tLowTone, N<30>, tHighTone, N<30>>>;

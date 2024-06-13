@@ -114,10 +114,13 @@ enum UID : uint8_t
   Signal_LFImage,
   Signal_HFImage,
   Signal_Laser,
+  Signal_LaserUp,
+  Signal_LaserDown,
   Signal_Image,
   Signal_PreciseLog,
   Signal_FlashUp,
   Signal_FlashDown,
+  
 
   // 测试UID
 
@@ -161,6 +164,8 @@ enum UID : uint8_t
   Step_InterfereFlash,
   Step_InterfereFlashStart,
   Step_InterfereFlashStop,
+  Step_Optogenetic,
+  Step_RandomOptogenetic,
   Step_PreciseLog,
   Step_PinLow,
 
@@ -183,6 +188,8 @@ enum UID : uint8_t
   Trial_InterfereRandomFlash,
   Trial_InterfereFlashStart,
  Trial_InterfereFlashStop, 
+ Trial_OptogeneticLightWater,
+ Trial_RandomOptogeneticLightWater,
   Trial_LowTone,
   Trial_HighTone,
 
@@ -199,6 +206,8 @@ enum UID : uint8_t
   Session_RandomImage,
   Session_InterfereRandomFlash,
   Session_InterfereFlash,
+  Session_OptogeneticLightWaterW,
+  Session_RandomOptogeneticLightWaterW,
   Session_RandomFlash,
   Session_HighLowTone,
 };
